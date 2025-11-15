@@ -1,0 +1,28 @@
+cubiom:
+  prefix: "&b&lCUBIOM &8»&r "
+  default-language: en_US
+
+survival-games:
+  min-players: 8
+  max-players: 24
+  grace-period: 60
+  refill-time: 180
+  deathmatch-time: 600
+  countdown: 10
+
+duels:
+  min-elo: 0
+  default-elo: 1000
+  elo-k-factor: 32
+  duel-timeout: 600
+
+hub:
+  world: world
+  spawn:
+    x: 0
+    y: 100
+    z: 0
+
+stats:
+  save-interval: 300
+  auto-backup: true

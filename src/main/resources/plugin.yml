@@ -1,0 +1,45 @@
+name: Cubiom
+version: 1.0
+main: com.cubiom.Cubiom
+author: Cubiom Team
+description: Cubiom 1.8 PvP Server - Survival Games and Duels
+website: https://cubiom.com
+load: STARTUP
+
+commands:
+  sg:
+    description: Survival Games commands
+    usage: /<command> [join|leave|stats|top|list]
+    permission: cubiom.sg
+  duel:
+    description: Duels commands
+    usage: /<command> [join|leave|accept|decline|invite|stats|top|list]
+    permission: cubiom.duel
+  lang:
+    description: Change language
+    usage: /<command> [set|list]
+    permission: cubiom.lang
+  cubiom:
+    description: Main plugin command
+    usage: /<command> [reload|version|help]
+    permission: cubiom.admin
+
+permissions:
+  cubiom.admin:
+    description: Admin permissions
+    default: op
+  cubiom.admin.sg:
+    description: SG admin permissions
+    default: op
+  cubiom.admin.duel:
+    description: Duel admin permissions
+    default: op
+  cubiom.sg:
+    description: Use SG commands
+    default: true
+  cubiom.duel:
+    description: Use Duel commands
+    default: true
+  cubiom.lang:
+    description: Change language
+    default: true
