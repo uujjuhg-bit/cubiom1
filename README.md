@@ -1,8 +1,8 @@
-# Cubiom Minecraft PvP Plugin
+# Cubiom Minecraft Plugin
 
-**Version:** 1.0  
-**Minecraft:** 1.8.8 Spigot  
-**Status:** Production Ready ✅
+**Minecraft 1.8.8 PvP Plugin** - Survival Games & Duels
+
+---
 
 ## Quick Start
 
@@ -12,51 +12,54 @@ mvn clean package
 ```
 
 ### Install
-1. Copy `target/Cubiom.jar` to `plugins/` folder
-2. Start Spigot 1.8.8 server
-3. Configure arenas (see FINAL_STATUS.md)
-
-## Features
-
-✅ Complete Survival Games (MCSG-style)  
-✅ Complete Duels System (1v1 PvP)  
-✅ 4 Languages (EN, DA, DE, ES)  
-✅ Smart Lobby Hotbar  
-✅ Beautiful GUI Menus  
-✅ World Rollback System  
-✅ Stats & ELO Tracking  
-✅ Professional Code Quality  
-
-## Player Commands
-
-```bash
-/sg join                    # Join Survival Games
-/duel join                  # Join duel queue
-/lang set en_US            # Change language
-```
-
-## Lobby System
-
-When players join, they automatically get a hotbar with 5 items:
-- **Diamond Sword** → Survival Games menu
-- **Iron Sword** → Duels menu  
-- **Book** → Personal stats
-- **Emerald** → Leaderboards
-- **Name Tag** → Language selector
-
-**All items work on right-click!**
-
-## Documentation
-
-- **FINAL_STATUS.md** - Complete feature list and usage guide
-- **BUILD_STATUS.md** - Technical implementation details
-- **IMPLEMENTATION_STATUS.md** - Development progress
-
-## Support
-
-Created for Cubiom PvP Server  
-Minecraft 1.8.8 PvP Excellence
+Place `target/Cubiom.jar` in your server's `plugins/` folder.
 
 ---
 
-**Ready to play! 🎮**
+## Features
+
+- **Survival Games** (MCSG-style)
+- **Duels System** (1v1 PvP with ELO)
+- **Multi-Language** (English, Danish, German, Spanish)
+- **Smart Lobby Hotbar** (5 interactive items)
+- **World Rollback** (automatic arena restoration)
+- **Stats Tracking** (wins, kills, deaths, KDR, ELO)
+
+---
+
+## Configuration
+
+See **SETUP_GUIDE.md** for complete setup instructions.
+
+---
+
+## Commands
+
+### Players
+```
+/sg join              - Join Survival Games
+/duel join            - Join duel queue
+/lang set <code>      - Change language (en_US, da_DK, de_DE, es_ES)
+```
+
+### Admins
+```
+/sg create <name>     - Create new SG arena
+/duel create <name>   - Create new duel arena
+/cubiom reload        - Reload plugin
+```
+
+Full command list in **SETUP_GUIDE.md**
+
+---
+
+## Documentation
+
+- **SETUP_GUIDE.md** - Complete setup and configuration guide
+- **README.md** - This file
+
+---
+
+**Version:** 1.0
+**Platform:** Spigot 1.8.8
+**License:** Private
