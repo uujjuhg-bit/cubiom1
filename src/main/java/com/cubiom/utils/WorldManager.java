@@ -2,7 +2,6 @@ package com.cubiom.utils;
 
 import com.cubiom.Cubiom;
 import org.bukkit.Difficulty;
-import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 

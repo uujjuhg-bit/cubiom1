@@ -327,7 +327,7 @@ public class SGCommand implements CommandExecutor {
             return;
         }
 
-        Location loc = player.getTargetBlock(null, 5).getLocation();
+        Location loc = player.getTargetBlock((java.util.Set<org.bukkit.Material>) null, 5).getLocation();
         arena.addTier1Chest(loc);
         player.sendMessage("§a§l✓ §aTier 1 chest added! §7(Total: " + arena.getTier1Chests().size() + ")");
         player.sendMessage("§7Look at another chest and run the command again");
@@ -340,7 +340,7 @@ public class SGCommand implements CommandExecutor {
             return;
         }
 
-        Location loc = player.getTargetBlock(null, 5).getLocation();
+        Location loc = player.getTargetBlock((java.util.Set<org.bukkit.Material>) null, 5).getLocation();
         arena.addTier2Chest(loc);
         player.sendMessage("§a§l✓ §aTier 2 chest added! §7(Total: " + arena.getTier2Chests().size() + ")");
     }
