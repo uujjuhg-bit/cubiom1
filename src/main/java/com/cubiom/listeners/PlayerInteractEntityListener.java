@@ -21,7 +21,7 @@ public class PlayerInteractEntityListener implements Listener {
         Player player = event.getPlayer();
         ItemStack item = player.getItemInHand();
 
-        if (item == null || item.getType() != Material.IRON_SWORD) {
+        if (item == null) {
             return;
         }
 
@@ -30,8 +30,14 @@ public class PlayerInteractEntityListener implements Listener {
         }
 
         Player target = (Player) event.getRightClicked();
-        event.setCancelled(true);
+        Material type = item.getType();
 
-        plugin.getGUIManager().openDuelInviteMenu(player, target);
+        if (type == Material.IRON_SWORD) {
+            event.setCancelled(true);
+            plugin.getGUIManager().openDuelInviteMenu(player, target);
+        } else if (type == Material.COMPASS) {
+            event.setCancelled(true);
+            plugin.getSGManager().sendPartyInvite(player, target);
+        }
     }
 }

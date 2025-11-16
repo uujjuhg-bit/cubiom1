@@ -40,6 +40,15 @@ public class SGCommand implements CommandExecutor {
             player.sendMessage("§7/sg stats §f- View your stats");
             player.sendMessage("§7/sg top §f- View top players");
             player.sendMessage("§7/sg list §f- List all arenas");
+            player.sendMessage("");
+            player.sendMessage("§b§lParty Commands:");
+            player.sendMessage("§7/sg party invite <player> §f- Invite to party");
+            player.sendMessage("§7/sg party accept §f- Accept invite");
+            player.sendMessage("§7/sg party decline §f- Decline invite");
+            player.sendMessage("§7/sg party list §f- List party members");
+            player.sendMessage("§7/sg party kick <player> §f- Kick member");
+            player.sendMessage("§7/sg party leave §f- Leave party");
+            player.sendMessage("§7/sg party disband §f- Disband party");
             if (player.hasPermission("cubiom.admin.sg")) {
                 player.sendMessage("");
                 player.sendMessage("§c§lAdmin Commands:");
@@ -84,6 +93,14 @@ public class SGCommand implements CommandExecutor {
 
             case "list":
                 handleList(player);
+                break;
+
+            case "party":
+                if (args.length < 2) {
+                    player.sendMessage("§cUsage: /sg party <invite|accept|decline|list|kick|leave|disband>");
+                    return true;
+                }
+                handleParty(player, args, langManager);
                 break;
 
             case "create":
@@ -447,5 +464,101 @@ public class SGCommand implements CommandExecutor {
         player.sendMessage("§7Tier 1 Chests: §b" + arena.getTier1Chests().size());
         player.sendMessage("§7Tier 2 Chests: §b" + arena.getTier2Chests().size());
         player.sendMessage("§b§l§m                                    ");
+    }
+
+    private void handleParty(Player player, String[] args, LanguageManager lang) {
+        String action = args[1].toLowerCase();
+
+        switch (action) {
+            case "invite":
+                if (args.length < 3) {
+                    player.sendMessage("§cUsage: /sg party invite <player>");
+                    return;
+                }
+                Player target = plugin.getServer().getPlayer(args[2]);
+                if (target == null || !target.isOnline()) {
+                    player.sendMessage(lang.getMessageWithPrefix(player, "sg.party.target-busy"));
+                    return;
+                }
+                if (target.equals(player)) {
+                    player.sendMessage("§cYou cannot invite yourself!");
+                    return;
+                }
+                plugin.getSGManager().sendPartyInvite(player, target);
+                break;
+
+            case "accept":
+                plugin.getSGManager().acceptPartyInvite(player);
+                break;
+
+            case "decline":
+                plugin.getSGManager().declinePartyInvite(player);
+                break;
+
+            case "list":
+                handlePartyList(player, lang);
+                break;
+
+            case "kick":
+                if (args.length < 3) {
+                    player.sendMessage("§cUsage: /sg party kick <player>");
+                    return;
+                }
+                Player targetKick = plugin.getServer().getPlayer(args[2]);
+                if (targetKick == null || !targetKick.isOnline()) {
+                    player.sendMessage("§cPlayer not found!");
+                    return;
+                }
+                plugin.getSGManager().kickFromParty(player, targetKick);
+                break;
+
+            case "leave":
+                plugin.getSGManager().leaveParty(player);
+                break;
+
+            case "disband":
+                com.cubiom.gamemodes.sg.SGParty party = plugin.getSGManager().getPlayerParty(player);
+                if (party == null) {
+                    player.sendMessage(lang.getMessageWithPrefix(player, "sg.party.not-in-party"));
+                    return;
+                }
+                if (!party.isLeader(player.getUniqueId())) {
+                    player.sendMessage(lang.getMessageWithPrefix(player, "sg.party.not-leader"));
+                    return;
+                }
+                plugin.getSGManager().disbandParty(party);
+                break;
+
+            default:
+                player.sendMessage("§cUsage: /sg party <invite|accept|decline|list|kick|leave|disband>");
+                break;
+        }
+    }
+
+    private void handlePartyList(Player player, LanguageManager lang) {
+        com.cubiom.gamemodes.sg.SGParty party = plugin.getSGManager().getPlayerParty(player);
+
+        if (party == null) {
+            player.sendMessage(lang.getMessageWithPrefix(player, "sg.party.not-in-party"));
+            return;
+        }
+
+        player.sendMessage(lang.getMessage(player, "sg.party.list-header"));
+
+        for (java.util.UUID uuid : party.getMembers()) {
+            Player member = plugin.getServer().getPlayer(uuid);
+            if (member != null) {
+                Map<String, String> rep = new HashMap<>();
+                rep.put("player", member.getName());
+
+                if (party.isLeader(uuid)) {
+                    player.sendMessage(lang.formatMessage(player, "sg.party.list-leader", rep));
+                } else {
+                    player.sendMessage(lang.formatMessage(player, "sg.party.list-member", rep));
+                }
+            }
+        }
+
+        player.sendMessage(lang.getMessage(player, "sg.party.list-footer"));
     }
 }
