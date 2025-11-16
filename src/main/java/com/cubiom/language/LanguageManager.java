@@ -111,4 +111,31 @@ public class LanguageManager {
         }
         return false;
     }
+
+    public java.util.List<String> getMessageList(Player player, String key) {
+        UUID uuid = player.getUniqueId();
+        String lang = plugin.getDataManager().getPlayerLanguage(uuid);
+        return getMessageList(lang, key);
+    }
+
+    public java.util.List<String> getMessageList(String language, String key) {
+        YamlConfiguration config = languages.get(language);
+
+        if (config == null) {
+            config = languages.get(plugin.getConfigManager().getDefaultLanguage());
+        }
+
+        java.util.List<String> messages = config.getStringList(key);
+
+        if (messages == null || messages.isEmpty()) {
+            return java.util.Collections.singletonList(ChatColor.RED + "Missing translation: " + key);
+        }
+
+        java.util.List<String> colored = new java.util.ArrayList<>();
+        for (String line : messages) {
+            colored.add(ChatColor.translateAlternateColorCodes('&', line));
+        }
+
+        return colored;
+    }
 }

@@ -23,6 +23,11 @@ commands:
     description: Main plugin command
     usage: /<command> [reload|version|help]
     permission: cubiom.admin
+  top:
+    description: View leaderboards
+    usage: /<command> [sgwins|sgkills|duel]
+    aliases: [leaderboard, lb]
+    permission: cubiom.top
 
 permissions:
   cubiom.admin:
@@ -42,4 +47,7 @@ permissions:
     default: true
   cubiom.lang:
     description: Change language
+    default: true
+  cubiom.top:
+    description: View leaderboards
     default: true
