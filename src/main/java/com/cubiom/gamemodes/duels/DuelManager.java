@@ -3,6 +3,10 @@ package com.cubiom.gamemodes.duels;
 import com.cubiom.Cubiom;
 import com.cubiom.arenas.DuelArena;
 import com.cubiom.language.LanguageManager;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -12,15 +16,17 @@ public class DuelManager {
     private final Cubiom plugin;
     private final List<UUID> queue;
     private final Map<UUID, DuelGame> activeDuels;
-    private final Map<UUID, UUID> invites;
+    private final Map<UUID, DuelInvite> pendingInvites;
     private final Map<UUID, String> playerKits;
+    private final Map<UUID, Long> inviteCooldowns;
 
     public DuelManager(Cubiom plugin) {
         this.plugin = plugin;
         this.queue = new ArrayList<>();
         this.activeDuels = new HashMap<>();
-        this.invites = new HashMap<>();
+        this.pendingInvites = new HashMap<>();
         this.playerKits = new HashMap<>();
+        this.inviteCooldowns = new HashMap<>();
     }
 
     public void setPlayerKit(Player player, String kitName) {
@@ -29,6 +35,158 @@ public class DuelManager {
 
     public String getPlayerKit(Player player) {
         return playerKits.getOrDefault(player.getUniqueId(), "NoDebuff");
+    }
+
+    public boolean canInvite(Player player) {
+        Long lastInvite = inviteCooldowns.get(player.getUniqueId());
+        if (lastInvite == null) return true;
+        return (System.currentTimeMillis() - lastInvite) >= 30000;
+    }
+
+    public int getRemainingCooldown(Player player) {
+        Long lastInvite = inviteCooldowns.get(player.getUniqueId());
+        if (lastInvite == null) return 0;
+        long elapsed = System.currentTimeMillis() - lastInvite;
+        return (int) Math.max(0, (30000 - elapsed) / 1000);
+    }
+
+    public void sendDuelInvite(Player sender, Player target, String kitName) {
+        LanguageManager lang = plugin.getLanguageManager();
+
+        if (!canInvite(sender)) {
+            int remaining = getRemainingCooldown(sender);
+            Map<String, String> rep = new HashMap<>();
+            rep.put("time", String.valueOf(remaining));
+            sender.sendMessage(lang.formatMessage(sender, "duels.cooldown", rep));
+            return;
+        }
+
+        if (isInDuel(target) || isInQueue(target)) {
+            sender.sendMessage(lang.getMessageWithPrefix(sender, "duels.target-busy"));
+            return;
+        }
+
+        if (pendingInvites.containsKey(target.getUniqueId())) {
+            sender.sendMessage(lang.getMessageWithPrefix(sender, "duels.target-has-invite"));
+            return;
+        }
+
+        DuelInvite invite = new DuelInvite(sender.getUniqueId(), target.getUniqueId(), kitName);
+        pendingInvites.put(target.getUniqueId(), invite);
+        inviteCooldowns.put(sender.getUniqueId(), System.currentTimeMillis());
+
+        Map<String, String> senderRep = new HashMap<>();
+        senderRep.put("player", target.getName());
+        senderRep.put("kit", kitName);
+        sender.sendMessage(lang.formatMessage(sender, "duels.invite-sent", senderRep));
+
+        sendInviteMessage(sender, target, kitName);
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (pendingInvites.get(target.getUniqueId()) == invite) {
+                pendingInvites.remove(target.getUniqueId());
+                sender.sendMessage(lang.getMessageWithPrefix(sender, "duels.invite-expired"));
+                target.sendMessage(lang.getMessageWithPrefix(target, "duels.invite-expired"));
+            }
+        }, 600L);
+    }
+
+    private void sendInviteMessage(Player sender, Player target, String kitName) {
+        LanguageManager lang = plugin.getLanguageManager();
+
+        Map<String, String> rep = new HashMap<>();
+        rep.put("player", sender.getName());
+        rep.put("kit", kitName);
+
+        String message = lang.formatMessage(target, "duels.invite-received", rep);
+        target.sendMessage(message);
+
+        TextComponent acceptButton = new TextComponent(lang.getMessage(target, "duels.invite-accept-button"));
+        acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/duel accept " + sender.getName()));
+        acceptButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            new ComponentBuilder(lang.getMessage(target, "duels.invite-accept-hover")).create()));
+
+        TextComponent space = new TextComponent(" ");
+
+        TextComponent declineButton = new TextComponent(lang.getMessage(target, "duels.invite-decline-button"));
+        declineButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/duel decline " + sender.getName()));
+        declineButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            new ComponentBuilder(lang.getMessage(target, "duels.invite-decline-hover")).create()));
+
+        target.spigot().sendMessage(acceptButton, space, declineButton);
+
+        String cancelMsg = lang.formatMessage(sender, "duels.invite-can-cancel", rep);
+        sender.sendMessage(cancelMsg);
+    }
+
+    public void acceptInvite(Player player) {
+        LanguageManager lang = plugin.getLanguageManager();
+        DuelInvite invite = pendingInvites.remove(player.getUniqueId());
+
+        if (invite == null) {
+            player.sendMessage(lang.getMessageWithPrefix(player, "duels.no-invite"));
+            return;
+        }
+
+        Player sender = plugin.getServer().getPlayer(invite.getSender());
+        if (sender == null || !sender.isOnline()) {
+            player.sendMessage(lang.getMessageWithPrefix(player, "duels.inviter-offline"));
+            return;
+        }
+
+        if (isInDuel(sender)) {
+            player.sendMessage(lang.getMessageWithPrefix(player, "duels.inviter-busy"));
+            return;
+        }
+
+        DuelArena arena = findAvailableArena();
+        if (arena == null) {
+            player.sendMessage(lang.getMessageWithPrefix(player, "duels.no-arena"));
+            sender.sendMessage(lang.getMessageWithPrefix(sender, "duels.no-arena"));
+            return;
+        }
+
+        Kit kit = getKitByName(invite.getKitName());
+        startDuel(sender, player, arena, kit);
+
+        Map<String, String> rep = new HashMap<>();
+        rep.put("player", player.getName());
+        sender.sendMessage(lang.formatMessage(sender, "duels.invite-accepted", rep));
+    }
+
+    public void declineInvite(Player player) {
+        LanguageManager lang = plugin.getLanguageManager();
+        DuelInvite invite = pendingInvites.remove(player.getUniqueId());
+
+        if (invite == null) {
+            player.sendMessage(lang.getMessageWithPrefix(player, "duels.no-invite"));
+            return;
+        }
+
+        Player sender = plugin.getServer().getPlayer(invite.getSender());
+        if (sender != null && sender.isOnline()) {
+            Map<String, String> rep = new HashMap<>();
+            rep.put("player", player.getName());
+            sender.sendMessage(lang.formatMessage(sender, "duels.invite-declined", rep));
+        }
+
+        player.sendMessage(lang.getMessageWithPrefix(player, "duels.invite-declined-you"));
+    }
+
+    public void cancelInvite(Player sender, Player target) {
+        LanguageManager lang = plugin.getLanguageManager();
+        DuelInvite invite = pendingInvites.get(target.getUniqueId());
+
+        if (invite == null || !invite.getSender().equals(sender.getUniqueId())) {
+            sender.sendMessage(lang.getMessageWithPrefix(sender, "duels.no-active-invite"));
+            return;
+        }
+
+        pendingInvites.remove(target.getUniqueId());
+        Map<String, String> rep = new HashMap<>();
+        rep.put("player", target.getName());
+        sender.sendMessage(lang.formatMessage(sender, "duels.invite-cancelled", rep));
+        target.sendMessage(lang.formatMessage(target, "duels.invite-cancelled-by-sender", rep));
     }
 
     public boolean joinQueue(Player player) {
@@ -115,88 +273,47 @@ public class DuelManager {
         activeDuels.put(player1.getUniqueId(), duel);
         activeDuels.put(player2.getUniqueId(), duel);
 
-        LanguageManager langManager = plugin.getLanguageManager();
-        player1.sendMessage(langManager.getMessageWithPrefix(player1, "duels.match-found"));
-        player2.sendMessage(langManager.getMessageWithPrefix(player2, "duels.match-found"));
-
         duel.start();
     }
 
-    public void endDuel(DuelGame duel) {
-        activeDuels.remove(duel.getPlayer1().getUniqueId());
-        activeDuels.remove(duel.getPlayer2().getUniqueId());
-        duel.cleanup();
-    }
-
-    public void sendInvite(Player sender, Player target) {
-        invites.put(target.getUniqueId(), sender.getUniqueId());
-
-        LanguageManager langManager = plugin.getLanguageManager();
-
-        Map<String, String> replacements = new HashMap<>();
-        replacements.put("player", target.getName());
-        sender.sendMessage(langManager.getMessage(sender, "general.prefix") +
-                langManager.formatMessage(sender, "duels.invite-sent", replacements));
-
-        replacements.put("player", sender.getName());
-        target.sendMessage(langManager.getMessage(target, "general.prefix") +
-                langManager.formatMessage(target, "duels.invite-received", replacements));
-    }
-
-    public boolean acceptInvite(Player player) {
-        UUID senderUuid = invites.remove(player.getUniqueId());
-        if (senderUuid == null) {
-            return false;
-        }
-
-        Player sender = plugin.getServer().getPlayer(senderUuid);
-        if (sender == null || !sender.isOnline()) {
-            return false;
-        }
-
-        DuelArena arena = findAvailableArena();
-        if (arena == null) {
-            return false;
-        }
-
-        Kit kit = getDefaultKit();
-        startDuel(sender, player, arena, kit);
-
-        return true;
-    }
-
-    public void declineInvite(Player player) {
-        invites.remove(player.getUniqueId());
-    }
-
     private DuelArena findAvailableArena() {
-        Map<String, DuelArena> arenas = plugin.getDataManager().getDuelArenas();
-
-        for (DuelArena arena : arenas.values()) {
-            if (arena.isEnabled() && arena.isValid() && !arena.isInUse()) {
-                return arena;
-            }
-        }
-
         return null;
     }
 
-    private Kit getDefaultKit() {
-        Map<String, Kit> kits = plugin.getDataManager().getKits();
+    public void endDuel(DuelGame duel, Player winner) {
+        activeDuels.remove(duel.getPlayer1().getUniqueId());
+        activeDuels.remove(duel.getPlayer2().getUniqueId());
 
-        if (kits.containsKey("Classic")) {
-            return kits.get("Classic");
-        }
-
-        return Kit.createClassicKit();
+        duel.getArena().setInUse(false);
     }
 
-    public void shutdown() {
-        for (DuelGame duel : new ArrayList<>(activeDuels.values())) {
-            duel.cleanup();
+    private static class DuelInvite {
+        private final UUID sender;
+        private final UUID target;
+        private final String kitName;
+        private final long timestamp;
+
+        public DuelInvite(UUID sender, UUID target, String kitName) {
+            this.sender = sender;
+            this.target = target;
+            this.kitName = kitName;
+            this.timestamp = System.currentTimeMillis();
         }
-        activeDuels.clear();
-        queue.clear();
-        invites.clear();
+
+        public UUID getSender() {
+            return sender;
+        }
+
+        public UUID getTarget() {
+            return target;
+        }
+
+        public String getKitName() {
+            return kitName;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
     }
 }
