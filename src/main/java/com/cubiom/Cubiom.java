@@ -129,6 +129,7 @@ public class Cubiom extends JavaPlugin {
         pm.registerEvents(new BlockPlaceListener(this), this);
         pm.registerEvents(new InventoryClickListener(this), this);
         pm.registerEvents(new PlayerInteractListener(this), this);
+        pm.registerEvents(new PlayerInteractEntityListener(this), this);
         pm.registerEvents(new EntityDamageListener(this), this);
     }
 

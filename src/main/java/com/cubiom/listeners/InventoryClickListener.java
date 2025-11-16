@@ -27,19 +27,18 @@ public class InventoryClickListener implements Listener {
         }
 
         Player player = (Player) event.getWhoClicked();
-        ItemStack clicked = event.getCurrentItem();
-        String title = event.getInventory().getTitle();
-
-        if (clicked == null || clicked.getType() == Material.AIR) {
-            return;
-        }
-
         String menuType = plugin.getGUIManager().getPlayerMenu(player);
+
         if (menuType == null) {
             return;
         }
 
         event.setCancelled(true);
+
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() == Material.AIR) {
+            return;
+        }
 
         int slot = event.getSlot();
         Material type = clicked.getType();
@@ -77,6 +76,8 @@ public class InventoryClickListener implements Listener {
                     } else if (slot == 49) {
                         player.closeInventory();
                     }
+                } else if (menuType.startsWith("DUEL_INVITE:")) {
+                    handleDuelInviteMenu(player, slot, menuType);
                 }
                 break;
         }
@@ -192,6 +193,40 @@ public class InventoryClickListener implements Listener {
             plugin.getScoreboardManager().setLobbyScoreboard(player);
 
             player.sendMessage(lang.getMessageWithPrefix(player, "language.changed"));
+        }
+    }
+
+    private void handleDuelInviteMenu(Player player, int slot, String menuType) {
+        if (slot == 22) {
+            player.closeInventory();
+            return;
+        }
+
+        String kitName = null;
+        if (slot == 10) {
+            kitName = "NoDebuff";
+        } else if (slot == 11) {
+            kitName = "Debuff";
+        } else if (slot == 12) {
+            kitName = "BuildUHC";
+        } else if (slot == 14) {
+            kitName = "Classic";
+        } else if (slot == 15) {
+            kitName = "Combo";
+        }
+
+        if (kitName != null) {
+            String targetUUID = menuType.substring("DUEL_INVITE:".length());
+            Player target = plugin.getServer().getPlayer(java.util.UUID.fromString(targetUUID));
+
+            if (target != null && target.isOnline()) {
+                plugin.getDuelManager().sendDuelInvite(player, target, kitName);
+                player.closeInventory();
+            } else {
+                LanguageManager lang = plugin.getLanguageManager();
+                player.sendMessage(lang.getMessageWithPrefix(player, "duels.target-offline"));
+                player.closeInventory();
+            }
         }
     }
 }

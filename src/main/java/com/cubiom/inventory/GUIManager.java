@@ -412,6 +412,104 @@ public class GUIManager {
         player.openInventory(inv);
     }
 
+    public void openDuelInviteMenu(Player sender, Player target) {
+        LanguageManager lang = plugin.getLanguageManager();
+        String title = ChatColor.translateAlternateColorCodes('&', lang.getMessage(sender, "gui.duel-invite"));
+        Inventory inv = Bukkit.createInventory(null, 27, title);
+
+        playerMenus.put(sender.getUniqueId(), "DUEL_INVITE:" + target.getUniqueId().toString());
+
+        ItemStack noDebuffKit = new ItemBuilder(Material.POTION)
+                .setName("&d&lNoDebuff")
+                .setLore(
+                        "&7Diamond armor + Prot 1",
+                        "&7Sharp 2 Diamond Sword",
+                        "&736 Health Potions",
+                        "&7Speed 2",
+                        "",
+                        "&e▶ Click to send duel request!"
+                )
+                .build();
+
+        ItemStack debuffKit = new ItemBuilder(Material.POTION)
+                .setName("&c&lDebuff")
+                .setLore(
+                        "&7Diamond armor + Prot 1",
+                        "&7Sharp 2 Diamond Sword",
+                        "&727 Health + 3 debuff types",
+                        "&7Speed 2",
+                        "",
+                        "&e▶ Click to send duel request!"
+                )
+                .build();
+
+        ItemStack buildUHCKit = new ItemBuilder(Material.WOOD)
+                .setName("&6&lBuildUHC")
+                .setLore(
+                        "&7Diamond armor + Prot 1",
+                        "&7Building materials included",
+                        "&7Bow + Arrows",
+                        "&7Golden Apples",
+                        "",
+                        "&e▶ Click to send duel request!"
+                )
+                .build();
+
+        ItemStack classicKit = new ItemBuilder(Material.DIAMOND_SWORD)
+                .setName("&b&lClassic")
+                .setLore(
+                        "&7Diamond armor unenchanted",
+                        "&7Sharp 1 Diamond Sword",
+                        "&7Bow + 32 Arrows",
+                        "&7No potion effects",
+                        "",
+                        "&e▶ Click to send duel request!"
+                )
+                .build();
+
+        ItemStack comboKit = new ItemBuilder(Material.STICK)
+                .setName("&e&lCombo")
+                .setLore(
+                        "&7No armor - pure PvP",
+                        "&7Knockback 1 Stick",
+                        "&7Speed 2",
+                        "&7Practice your combos!",
+                        "",
+                        "&e▶ Click to send duel request!"
+                )
+                .build();
+
+        Map<String, String> rep = new HashMap<>();
+        rep.put("player", target.getName());
+        String targetDisplay = lang.formatMessage(sender, "gui.duel-target", rep);
+
+        ItemStack targetItem = new ItemBuilder(Material.SKULL_ITEM, 1, (short) 3)
+                .setName("&e&l" + target.getName())
+                .setLore(
+                        targetDisplay,
+                        "",
+                        "&7Select a kit to",
+                        "&7send duel request"
+                )
+                .setSkullOwner(target.getName())
+                .build();
+
+        ItemStack closeItem = new ItemBuilder(Material.BARRIER)
+                .setName("&c&lClose")
+                .setLore("&7Cancel")
+                .build();
+
+        inv.setItem(4, targetItem);
+        inv.setItem(10, noDebuffKit);
+        inv.setItem(11, debuffKit);
+        inv.setItem(12, buildUHCKit);
+        inv.setItem(14, classicKit);
+        inv.setItem(15, comboKit);
+        inv.setItem(22, closeItem);
+
+        sender.openInventory(inv);
+    }
+
     public String getPlayerMenu(Player player) {
         return playerMenus.get(player.getUniqueId());
     }

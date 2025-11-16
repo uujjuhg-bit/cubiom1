@@ -78,11 +78,11 @@ public class DuelCommand implements CommandExecutor {
                 break;
 
             case "accept":
-                handleAccept(player, langManager);
+                handleAccept(player, args, langManager);
                 break;
 
             case "decline":
-                handleDecline(player, langManager);
+                handleDecline(player, args, langManager);
                 break;
 
             case "stats":
@@ -201,29 +201,24 @@ public class DuelCommand implements CommandExecutor {
         Player target = plugin.getServer().getPlayer(targetName);
 
         if (target == null || !target.isOnline()) {
-            player.sendMessage("§cPlayer not found!");
+            player.sendMessage(langManager.getMessageWithPrefix(player, "duels.target-offline"));
             return;
         }
 
         if (target.equals(player)) {
-            player.sendMessage("§cYou can't invite yourself!");
+            player.sendMessage(langManager.getMessageWithPrefix(player, "duels.cannot-invite-self"));
             return;
         }
 
-        plugin.getDuelManager().sendInvite(player, target);
+        plugin.getGUIManager().openDuelInviteMenu(player, target);
     }
 
-    private void handleAccept(Player player, LanguageManager langManager) {
-        if (plugin.getDuelManager().acceptInvite(player)) {
-            player.sendMessage(langManager.getMessageWithPrefix(player, "duels.invite-accepted"));
-        } else {
-            player.sendMessage(langManager.getMessageWithPrefix(player, "duels.no-invite"));
-        }
+    private void handleAccept(Player player, String[] args, LanguageManager langManager) {
+        plugin.getDuelManager().acceptInvite(player);
     }
 
-    private void handleDecline(Player player, LanguageManager langManager) {
+    private void handleDecline(Player player, String[] args, LanguageManager langManager) {
         plugin.getDuelManager().declineInvite(player);
-        player.sendMessage(langManager.getMessageWithPrefix(player, "duels.invite-declined"));
     }
 
     private void handleStats(Player player, LanguageManager langManager) {
