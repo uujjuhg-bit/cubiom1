@@ -13,12 +13,22 @@ public class DuelManager {
     private final List<UUID> queue;
     private final Map<UUID, DuelGame> activeDuels;
     private final Map<UUID, UUID> invites;
+    private final Map<UUID, String> playerKits;
 
     public DuelManager(Cubiom plugin) {
         this.plugin = plugin;
         this.queue = new ArrayList<>();
         this.activeDuels = new HashMap<>();
         this.invites = new HashMap<>();
+        this.playerKits = new HashMap<>();
+    }
+
+    public void setPlayerKit(Player player, String kitName) {
+        playerKits.put(player.getUniqueId(), kitName);
+    }
+
+    public String getPlayerKit(Player player) {
+        return playerKits.getOrDefault(player.getUniqueId(), "NoDebuff");
     }
 
     public boolean joinQueue(Player player) {

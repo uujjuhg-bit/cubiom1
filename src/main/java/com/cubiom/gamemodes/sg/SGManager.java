@@ -101,4 +101,38 @@ public class SGManager {
     public Map<String, SGGame> getActiveGames() {
         return activeGames;
     }
+
+    public List<Arena> getArenas() {
+        Map<String, Arena> arenas = plugin.getDataManager().getArenas();
+        return new ArrayList<>(arenas.values());
+    }
+
+    public Arena getArenaByName(String name) {
+        Map<String, Arena> arenas = plugin.getDataManager().getArenas();
+        return arenas.get(name);
+    }
+
+    public SGGame getGameByArena(Arena arena) {
+        return activeGames.get(arena.getName());
+    }
+
+    public boolean joinGame(Player player, Arena arena) {
+        if (isInGame(player)) {
+            return false;
+        }
+
+        SGGame game = activeGames.get(arena.getName());
+
+        if (game == null) {
+            game = new SGGame(plugin, arena);
+            activeGames.put(arena.getName(), game);
+        }
+
+        if (game.addPlayer(player)) {
+            playerGames.put(player.getUniqueId(), game);
+            return true;
+        }
+
+        return false;
+    }
 }
