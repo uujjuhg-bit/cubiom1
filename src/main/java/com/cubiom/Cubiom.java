@@ -115,6 +115,7 @@ public class Cubiom extends JavaPlugin {
         getCommand("lang").setExecutor(new LanguageCommand(this));
         getCommand("cubiom").setExecutor(new CubiomCommand(this));
         getCommand("top").setExecutor(new TopCommand(this));
+        getCommand("stats").setExecutor(new StatsCommand(this));
     }
 
     private void registerListeners() {

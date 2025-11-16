@@ -4,6 +4,7 @@ import com.cubiom.Cubiom;
 import com.cubiom.arenas.Arena;
 import com.cubiom.language.LanguageManager;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,51 +28,55 @@ public class InventoryClickListener implements Listener {
 
         Player player = (Player) event.getWhoClicked();
         ItemStack clicked = event.getCurrentItem();
+        String title = event.getInventory().getTitle();
 
-        if (clicked == null || !clicked.hasItemMeta() || !clicked.getItemMeta().hasDisplayName()) {
+        if (clicked == null || clicked.getType() == Material.AIR) {
             return;
         }
 
-        String title = event.getInventory().getTitle();
         String menuType = plugin.getGUIManager().getPlayerMenu(player);
-
         if (menuType == null) {
             return;
         }
 
         event.setCancelled(true);
 
-        String itemName = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
+        int slot = event.getSlot();
+        Material type = clicked.getType();
 
-        if (itemName.equalsIgnoreCase("Close")) {
+        if (type == Material.BARRIER) {
             player.closeInventory();
             return;
         }
 
         switch (menuType) {
             case "SG_MAIN":
-                handleSGMainMenu(player, clicked, itemName, event.getSlot());
+                handleSGMenu(player, slot, clicked);
                 break;
 
             case "DUELS_MAIN":
-                handleDuelsMainMenu(player, clicked, itemName);
+                handleDuelsMenu(player, slot, clicked);
                 break;
 
             case "STATS":
-                handleStatsMenu(player, clicked, itemName);
+                if (slot == 49) player.closeInventory();
                 break;
 
             case "LEADERBOARD":
-                handleLeaderboardMenu(player, clicked, itemName);
+                handleLeaderboardMenu(player, slot);
                 break;
 
             case "LANGUAGE":
-                handleLanguageMenu(player, clicked, itemName);
+                handleLanguageMenu(player, slot);
                 break;
 
             default:
                 if (menuType.startsWith("LEADERBOARD_")) {
-                    handleLeaderboardDetailsMenu(player, clicked, itemName);
+                    if (slot == 48) {
+                        plugin.getGUIManager().openTopMenu(player);
+                    } else if (slot == 49) {
+                        player.closeInventory();
+                    }
                 }
                 break;
         }
@@ -85,49 +90,60 @@ public class InventoryClickListener implements Listener {
         }
     }
 
-    private void handleSGMainMenu(Player player, ItemStack clicked, String itemName, int slot) {
-        if (itemName.contains("Your SG Stats")) {
+    private void handleSGMenu(Player player, int slot, ItemStack clicked) {
+        if (slot == 48 && clicked.getType() == Material.PAPER) {
             plugin.getGUIManager().openStatsMenu(player);
             return;
         }
 
-        if (slot >= 10 && slot <= 34) {
-            String arenaName = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
-            Arena arena = plugin.getSGManager().getArenaByName(arenaName);
+        if (slot == 49) {
+            player.closeInventory();
+            return;
+        }
 
-            if (arena != null && arena.isEnabled()) {
-                player.closeInventory();
-                boolean joined = plugin.getSGManager().joinGame(player, arena);
+        if ((slot >= 10 && slot <= 16) || (slot >= 19 && slot <= 25) || (slot >= 28 && slot <= 34)) {
+            if (clicked.hasItemMeta() && clicked.getItemMeta().hasDisplayName()) {
+                String arenaName = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
+                Arena arena = plugin.getSGManager().getArenaByName(arenaName);
 
-                LanguageManager lang = plugin.getLanguageManager();
-                if (joined) {
-                    player.sendMessage(lang.getMessageWithPrefix(player, "sg.join-success"));
-                } else {
-                    player.sendMessage(lang.getMessageWithPrefix(player, "sg.game-full"));
+                if (arena != null && arena.isEnabled()) {
+                    player.closeInventory();
+                    boolean joined = plugin.getSGManager().joinGame(player, arena);
+
+                    LanguageManager lang = plugin.getLanguageManager();
+                    if (joined) {
+                        player.sendMessage(lang.getMessageWithPrefix(player, "sg.join-success"));
+                    } else {
+                        player.sendMessage(lang.getMessageWithPrefix(player, "sg.game-full"));
+                    }
                 }
             }
         }
     }
 
-    private void handleDuelsMainMenu(Player player, ItemStack clicked, String itemName) {
-        LanguageManager lang = plugin.getLanguageManager();
-
-        if (itemName.contains("Your Duel Stats")) {
+    private void handleDuelsMenu(Player player, int slot, ItemStack clicked) {
+        if (slot == 48 && clicked.getType() == Material.PAPER) {
             plugin.getGUIManager().openStatsMenu(player);
             return;
         }
 
+        if (slot == 49) {
+            player.closeInventory();
+            return;
+        }
+
+        LanguageManager lang = plugin.getLanguageManager();
         String kitName = null;
 
-        if (itemName.contains("NoDebuff")) {
+        if (slot == 11 && clicked.getType() == Material.POTION) {
             kitName = "NoDebuff";
-        } else if (itemName.contains("Debuff") && !itemName.contains("No")) {
+        } else if (slot == 13 && clicked.getType() == Material.POTION) {
             kitName = "Debuff";
-        } else if (itemName.contains("BuildUHC")) {
+        } else if (slot == 15 && clicked.getType() == Material.WOOD) {
             kitName = "BuildUHC";
-        } else if (itemName.contains("Classic")) {
+        } else if (slot == 20 && clicked.getType() == Material.DIAMOND_SWORD) {
             kitName = "Classic";
-        } else if (itemName.contains("Combo")) {
+        } else if (slot == 24 && clicked.getType() == Material.STICK) {
             kitName = "Combo";
         }
 
@@ -135,42 +151,37 @@ public class InventoryClickListener implements Listener {
             player.closeInventory();
             plugin.getDuelManager().setPlayerKit(player, kitName);
             plugin.getDuelManager().joinQueue(player);
-
             player.sendMessage(lang.getMessageWithPrefix(player, "duels.join-queue"));
         }
     }
 
-    private void handleStatsMenu(Player player, ItemStack clicked, String itemName) {
-    }
-
-    private void handleLeaderboardMenu(Player player, ItemStack clicked, String itemName) {
-        if (itemName.contains("Top SG Wins")) {
+    private void handleLeaderboardMenu(Player player, int slot) {
+        if (slot == 20) {
             plugin.getGUIManager().openLeaderboardDetails(player, "SG_WINS");
-        } else if (itemName.contains("Top SG Kills")) {
+        } else if (slot == 22) {
             plugin.getGUIManager().openLeaderboardDetails(player, "SG_KILLS");
-        } else if (itemName.contains("Top Duel ELO")) {
+        } else if (slot == 24) {
             plugin.getGUIManager().openLeaderboardDetails(player, "DUEL_ELO");
+        } else if (slot == 49) {
+            player.closeInventory();
         }
     }
 
-    private void handleLeaderboardDetailsMenu(Player player, ItemStack clicked, String itemName) {
-        if (itemName.equalsIgnoreCase("Back")) {
-            plugin.getGUIManager().openTopMenu(player);
-        }
-    }
-
-    private void handleLanguageMenu(Player player, ItemStack clicked, String itemName) {
+    private void handleLanguageMenu(Player player, int slot) {
         LanguageManager lang = plugin.getLanguageManager();
         String newLang = null;
 
-        if (itemName.equalsIgnoreCase("English")) {
+        if (slot == 10) {
             newLang = "en_US";
-        } else if (itemName.equalsIgnoreCase("Dansk")) {
+        } else if (slot == 12) {
             newLang = "da_DK";
-        } else if (itemName.equalsIgnoreCase("Deutsch")) {
+        } else if (slot == 14) {
             newLang = "de_DE";
-        } else if (itemName.equalsIgnoreCase("Español")) {
+        } else if (slot == 16) {
             newLang = "es_ES";
+        } else if (slot == 22) {
+            player.closeInventory();
+            return;
         }
 
         if (newLang != null) {
