@@ -135,15 +135,15 @@ public class InventoryClickListener implements Listener {
         LanguageManager lang = plugin.getLanguageManager();
         String kitName = null;
 
-        if (slot == 11 && clicked.getType() == Material.POTION) {
+        if (slot == 11) {
             kitName = "NoDebuff";
-        } else if (slot == 13 && clicked.getType() == Material.POTION) {
+        } else if (slot == 13) {
             kitName = "Debuff";
-        } else if (slot == 15 && clicked.getType() == Material.WOOD) {
+        } else if (slot == 15) {
             kitName = "BuildUHC";
-        } else if (slot == 20 && clicked.getType() == Material.DIAMOND_SWORD) {
+        } else if (slot == 20) {
             kitName = "Classic";
-        } else if (slot == 24 && clicked.getType() == Material.STICK) {
+        } else if (slot == 24) {
             kitName = "Combo";
         }
 

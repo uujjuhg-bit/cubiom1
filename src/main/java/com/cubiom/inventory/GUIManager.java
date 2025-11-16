@@ -8,6 +8,7 @@ import com.cubiom.language.LanguageManager;
 import com.cubiom.stats.PlayerStats;
 import com.cubiom.utils.ItemBuilder;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -199,7 +200,7 @@ public class GUIManager {
                 )
                 .build();
 
-        ItemStack profileItem = new ItemBuilder(Material.SKULL_ITEM)
+        ItemStack profileItem = new ItemBuilder(Material.SKULL_ITEM, 1, (short) 3)
                 .setName("&e&l" + player.getName())
                 .setLore(
                         "&7Player Profile",
@@ -281,6 +282,7 @@ public class GUIManager {
                 return;
         }
 
+        title = ChatColor.translateAlternateColorCodes('&', title);
         Inventory inv = Bukkit.createInventory(null, 54, title);
         playerMenus.put(player.getUniqueId(), "LEADERBOARD_" + type);
 
