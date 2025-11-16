@@ -316,4 +316,24 @@ public class DuelManager {
             return timestamp;
         }
     }
+
+    public void shutdown() {
+        for (DuelGame game : activeDuels.values()) {
+            Player player1 = plugin.getServer().getPlayer(game.getPlayer1());
+            Player player2 = plugin.getServer().getPlayer(game.getPlayer2());
+
+            if (player1 != null) {
+                player1.teleport(plugin.getConfigManager().getLobbySpawn());
+            }
+            if (player2 != null) {
+                player2.teleport(plugin.getConfigManager().getLobbySpawn());
+            }
+        }
+
+        activeDuels.clear();
+        playerGames.clear();
+        queue.clear();
+        pendingInvites.clear();
+        inviteCooldowns.clear();
+    }
 }

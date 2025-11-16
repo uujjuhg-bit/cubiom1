@@ -31,9 +31,10 @@ public class PlayerQuitListener implements Listener {
         if (plugin.getDuelManager().isInDuel(player)) {
             DuelGame duel = plugin.getDuelManager().getPlayerDuel(player);
             if (duel != null) {
-                Player opponent = duel.getPlayer1().equals(player) ? duel.getPlayer2() : duel.getPlayer1();
-                duel.handlePlayerDeath(player);
-                plugin.getDuelManager().endDuel(duel);
+                Player opponent = plugin.getServer().getPlayer(
+                    duel.getPlayer1().equals(player.getUniqueId()) ? duel.getPlayer2() : duel.getPlayer1()
+                );
+                plugin.getDuelManager().endDuel(duel, opponent);
             }
         }
     }

@@ -32,8 +32,11 @@ public class PlayerDeathListener implements Listener {
         if (plugin.getDuelManager().isInDuel(player)) {
             DuelGame duel = plugin.getDuelManager().getPlayerDuel(player);
             if (duel != null) {
+                Player winner = plugin.getServer().getPlayer(
+                    duel.getPlayer1().equals(player.getUniqueId()) ? duel.getPlayer2() : duel.getPlayer1()
+                );
                 duel.handlePlayerDeath(player);
-                plugin.getDuelManager().endDuel(duel);
+                plugin.getDuelManager().endDuel(duel, winner);
                 event.setDeathMessage(null);
             }
         }
