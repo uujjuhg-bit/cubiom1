@@ -1,7 +1,7 @@
 package com.cubiom.gamemodes.sg;
 
 public enum GameState {
-    LOBBY,
+    WAITING,
     COUNTDOWN,
     GRACE_PERIOD,
     RUNNING,

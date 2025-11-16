@@ -34,7 +34,7 @@ public class SGGame {
         this.spectators = new HashSet<>();
         this.lootManager = new LootManager();
         this.worldSnapshot = new WorldSnapshot(plugin, arena);
-        this.state = GameState.LOBBY;
+        this.state = GameState.WAITING;
         this.timer = 0;
     }
 
@@ -63,22 +63,33 @@ public class SGGame {
             return false;
         }
 
-        if (state != GameState.LOBBY && state != GameState.COUNTDOWN) {
+        if (state != GameState.WAITING && state != GameState.COUNTDOWN) {
             return false;
         }
 
         PlayerGameData data = new PlayerGameData(player);
         players.put(player.getUniqueId(), data);
 
-        player.teleport(arena.getLobbySpawn());
+        List<Location> spawns = new ArrayList<>(arena.getSpawnPoints());
+        Location spawn = spawns.get(new Random().nextInt(spawns.size()));
+        player.teleport(spawn);
         player.setGameMode(GameMode.SURVIVAL);
         player.getInventory().clear();
         player.setHealth(20.0);
         player.setFoodLevel(20);
 
-        broadcastMessage("sg.join-success", player);
+        LanguageManager langManager = plugin.getLanguageManager();
+        player.sendMessage(langManager.getMessageWithPrefix(player, "sg.join-arena"));
 
-        if (players.size() >= arena.getMinPlayers() && state == GameState.LOBBY) {
+        Map<String, String> replacements = new HashMap<>();
+        replacements.put("current", String.valueOf(players.size()));
+        replacements.put("min", String.valueOf(arena.getMinPlayers()));
+        broadcastMessageFormatted("sg.waiting-for-players", replacements);
+
+        plugin.getScoreboardManager().setSGWaitingScoreboard(player, players.size(), arena.getMinPlayers());
+
+        if (players.size() >= arena.getMinPlayers() && state == GameState.WAITING) {
+            broadcastMessage("sg.countdown-starting", null);
             startCountdown();
         }
 
@@ -96,6 +107,8 @@ public class SGGame {
         if (players.size() < arena.getMinPlayers() && state == GameState.COUNTDOWN) {
             cancelCountdown();
         }
+
+        plugin.getScoreboardManager().setLobbyScoreboard(player);
     }
 
     private void startCountdown() {
@@ -127,8 +140,19 @@ public class SGGame {
             gameTask.cancel();
             gameTask = null;
         }
-        state = GameState.LOBBY;
+        state = GameState.WAITING;
         timer = 0;
+
+        for (PlayerGameData data : players.values()) {
+            Player p = data.getPlayer();
+            if (p != null && p.isOnline()) {
+                Map<String, String> replacements = new HashMap<>();
+                replacements.put("current", String.valueOf(players.size()));
+                replacements.put("min", String.valueOf(arena.getMinPlayers()));
+                String message = plugin.getLanguageManager().formatMessage(p, "sg.waiting-for-players", replacements);
+                p.sendMessage(message);
+            }
+        }
     }
 
     private void startGame() {
@@ -144,6 +168,7 @@ public class SGGame {
             Location spawn = spawns.get(index % spawns.size());
             data.setSpawnLocation(spawn);
             data.getPlayer().teleport(spawn);
+            plugin.getScoreboardManager().setSGGameScoreboard(data.getPlayer(), this);
             index++;
         }
 
@@ -309,11 +334,27 @@ public class SGGame {
             gameTask = null;
         }
 
+        World lobbyWorld = plugin.getServer().getWorld("lobby");
+
         for (PlayerGameData data : players.values()) {
             Player player = data.getPlayer();
             if (player != null && player.isOnline()) {
+                if (lobbyWorld != null) {
+                    player.teleport(lobbyWorld.getSpawnLocation());
+                }
+
                 player.setGameMode(GameMode.SURVIVAL);
                 player.getInventory().clear();
+                player.setHealth(20.0);
+                player.setFoodLevel(20);
+                player.setFireTicks(0);
+                player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
+
+                plugin.getHotbarManager().giveHotbarItems(player);
+                plugin.getScoreboardManager().setLobbyScoreboard(player);
+
+                LanguageManager langManager = plugin.getLanguageManager();
+                player.sendMessage(langManager.getMessageWithPrefix(player, "general.returning-to-lobby"));
             }
         }
 
@@ -321,6 +362,7 @@ public class SGGame {
 
         players.clear();
         spectators.clear();
+        state = GameState.WAITING;
     }
 
     public void trackBlockPlace(Location location) {
@@ -359,5 +401,19 @@ public class SGGame {
 
     public boolean isInGame(UUID uuid) {
         return players.containsKey(uuid);
+    }
+
+    public List<Player> getAlivePlayers() {
+        List<Player> alive = new ArrayList<>();
+        for (PlayerGameData data : players.values()) {
+            if (data.isAlive() && data.getPlayer() != null && data.getPlayer().isOnline()) {
+                alive.add(data.getPlayer());
+            }
+        }
+        return alive;
+    }
+
+    public PlayerGameData getPlayerData(Player player) {
+        return players.get(player.getUniqueId());
     }
 }

@@ -1,6 +1,8 @@
 package com.cubiom.arenas;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -127,5 +129,34 @@ public class Arena {
                 && deathmatchSpawn != null
                 && minPlayers > 0
                 && maxPlayers >= minPlayers;
+    }
+
+    public void setupArena() {
+        if (worldName == null) {
+            return;
+        }
+
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            return;
+        }
+
+        world.setGameRuleValue("doDaylightCycle", "false");
+        world.setGameRuleValue("doMobSpawning", "false");
+        world.setGameRuleValue("doWeatherCycle", "false");
+        world.setGameRuleValue("announceAdvancements", "false");
+        world.setGameRuleValue("showDeathMessages", "false");
+        world.setGameRuleValue("keepInventory", "false");
+        world.setGameRuleValue("naturalRegeneration", "true");
+        world.setTime(6000);
+        world.setStorm(false);
+        world.setThundering(false);
+
+        if (Bukkit.getPluginManager().isPluginEnabled("Multiverse-Core")) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv modify set animals false " + worldName);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv modify set monsters false " + worldName);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv modify set pvp true " + worldName);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv modify set difficulty 2 " + worldName);
+        }
     }
 }

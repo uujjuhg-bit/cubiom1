@@ -13,12 +13,16 @@ public class PlayerGameData {
     private int kills;
     private Location spawnLocation;
     private UUID lastDamager;
+    private Location previousLocation;
+    private String previousWorld;
 
     public PlayerGameData(Player player) {
         this.uuid = player.getUniqueId();
         this.player = player;
         this.alive = true;
         this.kills = 0;
+        this.previousLocation = player.getLocation().clone();
+        this.previousWorld = player.getWorld().getName();
     }
 
     public UUID getUuid() {
@@ -59,5 +63,21 @@ public class PlayerGameData {
 
     public void setLastDamager(UUID lastDamager) {
         this.lastDamager = lastDamager;
+    }
+
+    public Location getPreviousLocation() {
+        return previousLocation;
+    }
+
+    public void setPreviousLocation(Location previousLocation) {
+        this.previousLocation = previousLocation;
+    }
+
+    public String getPreviousWorld() {
+        return previousWorld;
+    }
+
+    public void setPreviousWorld(String previousWorld) {
+        this.previousWorld = previousWorld;
     }
 }

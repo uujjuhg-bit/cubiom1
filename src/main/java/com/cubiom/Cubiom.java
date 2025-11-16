@@ -8,8 +8,11 @@ import com.cubiom.gamemodes.sg.SGManager;
 import com.cubiom.inventory.GUIManager;
 import com.cubiom.language.LanguageManager;
 import com.cubiom.listeners.*;
+import com.cubiom.stats.LeaderboardManager;
 import com.cubiom.stats.StatsManager;
 import com.cubiom.utils.HotbarManager;
+import com.cubiom.utils.ScoreboardManager;
+import com.cubiom.utils.TabListManager;
 import com.cubiom.utils.WorldManager;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,6 +30,9 @@ public class Cubiom extends JavaPlugin {
     private GUIManager guiManager;
     private HotbarManager hotbarManager;
     private WorldManager worldManager;
+    private ScoreboardManager scoreboardManager;
+    private TabListManager tabListManager;
+    private LeaderboardManager leaderboardManager;
 
     @Override
     public void onEnable() {
@@ -55,11 +61,15 @@ public class Cubiom extends JavaPlugin {
             guiManager = new GUIManager(this);
             hotbarManager = new HotbarManager(this);
             worldManager = new WorldManager(this);
+            scoreboardManager = new ScoreboardManager(this);
+            tabListManager = new TabListManager(this);
+            leaderboardManager = new LeaderboardManager(this);
 
             registerCommands();
             registerListeners();
 
             startAutoSave();
+            startUpdaters();
 
             getLogger().info("Cubiom enabled successfully!");
 
@@ -104,6 +114,7 @@ public class Cubiom extends JavaPlugin {
         getCommand("duel").setExecutor(new DuelCommand(this));
         getCommand("lang").setExecutor(new LanguageCommand(this));
         getCommand("cubiom").setExecutor(new CubiomCommand(this));
+        getCommand("top").setExecutor(new TopCommand(this));
     }
 
     private void registerListeners() {
@@ -131,6 +142,16 @@ public class Cubiom extends JavaPlugin {
                 getLogger().warning("Auto-save failed: " + e.getMessage());
             }
         }, saveInterval, saveInterval);
+    }
+
+    private void startUpdaters() {
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            tabListManager.updateAllTabLists();
+        }, 0L, 20L);
+
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            scoreboardManager.updateAll();
+        }, 0L, 20L);
     }
 
     public void reload() {
@@ -185,5 +206,17 @@ public class Cubiom extends JavaPlugin {
 
     public WorldManager getWorldManager() {
         return worldManager;
+    }
+
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
+    }
+
+    public TabListManager getTabListManager() {
+        return tabListManager;
+    }
+
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboardManager;
     }
 }
