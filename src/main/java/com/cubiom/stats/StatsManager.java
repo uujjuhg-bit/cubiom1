@@ -56,6 +56,10 @@ public class StatsManager {
         return playerStats.computeIfAbsent(uuid, PlayerStats::new);
     }
 
+    public void loadPlayerStats(UUID uuid) {
+        playerStats.computeIfAbsent(uuid, PlayerStats::new);
+    }
+
     public List<PlayerStats> getTopSGWins(int limit) {
         return playerStats.values().stream()
                 .sorted(Comparator.comparingInt(PlayerStats::getSgWins).reversed())

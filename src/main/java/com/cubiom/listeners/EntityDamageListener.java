@@ -31,7 +31,7 @@ public class EntityDamageListener implements Listener {
             if (game != null) {
                 GameState state = game.getState();
 
-                if (state == GameState.LOBBY || state == GameState.COUNTDOWN || state == GameState.GRACE_PERIOD) {
+                if (state == GameState.WAITING || state == GameState.COUNTDOWN || state == GameState.GRACE_PERIOD) {
                     event.setCancelled(true);
                 }
             }
@@ -57,7 +57,7 @@ public class EntityDamageListener implements Listener {
             if (game != null) {
                 GameState state = game.getState();
 
-                if (state == GameState.LOBBY || state == GameState.COUNTDOWN || state == GameState.GRACE_PERIOD) {
+                if (state == GameState.WAITING || state == GameState.COUNTDOWN || state == GameState.GRACE_PERIOD) {
                     event.setCancelled(true);
                 }
             }

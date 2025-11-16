@@ -57,7 +57,7 @@ public class SGManager {
     private SGGame findAvailableGame() {
         for (SGGame game : activeGames.values()) {
             GameState state = game.getState();
-            if ((state == GameState.LOBBY || state == GameState.COUNTDOWN)
+            if ((state == GameState.WAITING || state == GameState.COUNTDOWN)
                     && game.getPlayers().size() < game.getArena().getMaxPlayers()) {
                 return game;
             }
