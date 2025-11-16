@@ -48,10 +48,30 @@ public class PlayerJoinListener implements Listener {
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (player.isOnline()) {
-                    String motd = plugin.getLanguageManager().getMessage(player, "motd.join");
-                    player.sendMessage(motd);
+                    sendAdvancedMOTD(player);
                 }
             }, 20L);
         }
+    }
+
+    private void sendAdvancedMOTD(Player player) {
+        PlayerStats stats = plugin.getStatsManager().getPlayerStats(player.getUniqueId());
+        int onlinePlayers = Bukkit.getOnlinePlayers().size();
+
+        player.sendMessage("");
+        player.sendMessage("§8§m                                                    ");
+        player.sendMessage("");
+        player.sendMessage("         §b§lCUBIOM §7§l» §fWelcome, §b" + player.getName() + "§f!");
+        player.sendMessage("");
+        player.sendMessage("  §7§l┃ §fServer §8» §b" + onlinePlayers + " §7online");
+        player.sendMessage("  §7§l┃ §fYour Stats §8»");
+        player.sendMessage("      §7§l▪ §fSG Wins: §b" + stats.getSgWins() + " §7§l▪ §fDuel ELO: §b" + stats.getDuelElo());
+        player.sendMessage("      §7§l▪ §fSG Kills: §b" + stats.getSgKills() + " §7§l▪ §fDuel Wins: §b" + stats.getDuelWins());
+        player.sendMessage("");
+        player.sendMessage("  §e§l⚡ §eNew: §fBuildUHC & Combo kits now available!");
+        player.sendMessage("  §e§l⚡ §eUse §b/stats §eto view detailed statistics");
+        player.sendMessage("");
+        player.sendMessage("§8§m                                                    ");
+        player.sendMessage("");
     }
 }

@@ -87,8 +87,26 @@ public class DuelManager {
             return;
         }
 
-        Kit kit = getDefaultKit();
+        String kitName = getPlayerKit(player1);
+        Kit kit = getKitByName(kitName);
         startDuel(player1, player2, arena, kit);
+    }
+
+    private Kit getKitByName(String name) {
+        switch (name) {
+            case "NoDebuff":
+                return Kit.createNoDebuffKit();
+            case "Debuff":
+                return Kit.createDebuffKit();
+            case "BuildUHC":
+                return Kit.createBuildUHCKit();
+            case "Classic":
+                return Kit.createClassicKit();
+            case "Combo":
+                return Kit.createComboKit();
+            default:
+                return Kit.createNoDebuffKit();
+        }
     }
 
     private void startDuel(Player player1, Player player2, DuelArena arena, Kit kit) {

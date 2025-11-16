@@ -11,6 +11,10 @@ general:
   teleporting: "&aTeleportiere..."
   returning-to-lobby: "&aZurück zur Lobby..."
 
+language:
+  changed: "&a&l✓ &aLanguage changed successfully!"
+  current: "&7Current language: &b{language}"
+
 sg:
   join-success: "&aDu bist Survival Games beigetreten!"
   join-arena: "&aTeleportiere zur Arena..."

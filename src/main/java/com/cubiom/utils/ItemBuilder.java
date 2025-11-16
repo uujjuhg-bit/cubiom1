@@ -6,6 +6,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,6 +74,10 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder addLore(String line) {
+        return addLoreLine(line);
+    }
+
     public ItemBuilder setAmount(int amount) {
         itemStack.setAmount(amount);
         return this;
@@ -113,6 +118,17 @@ public class ItemBuilder {
         if (meta != null) {
             meta.addItemFlags(flags);
             itemStack.setItemMeta(meta);
+        }
+        return this;
+    }
+
+    public ItemBuilder setSkullOwner(String owner) {
+        if (itemStack.getType() == Material.SKULL_ITEM && itemStack.getDurability() == 3) {
+            SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
+            if (skullMeta != null) {
+                skullMeta.setOwner(owner);
+                itemStack.setItemMeta(skullMeta);
+            }
         }
         return this;
     }
