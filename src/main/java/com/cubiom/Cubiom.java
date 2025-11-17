@@ -37,7 +37,10 @@ public class Cubiom extends JavaPlugin {
             saveDefaultConfig();
 
             supabaseManager = new SupabaseManager(this);
+
             languageManager = new LanguageManager(this);
+            languageManager.load();
+
             playerManager = new PlayerManager(this);
             arenaManager = new ArenaManager(this);
             sgManager = new SGManager(this);

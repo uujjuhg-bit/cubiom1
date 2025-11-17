@@ -31,15 +31,33 @@ public class SupabaseManager {
         this.executor = Executors.newFixedThreadPool(4);
         this.cache = new HashMap<>();
 
-        Dotenv dotenv = Dotenv.configure()
-                .directory(plugin.getDataFolder().getParent() + "/..")
-                .filename(".env")
-                .load();
+        try {
+            Dotenv dotenv = Dotenv.configure()
+                    .directory(".")
+                    .filename(".env")
+                    .ignoreIfMissing()
+                    .load();
 
-        this.supabaseUrl = dotenv.get("SUPABASE_URL");
-        this.supabaseKey = dotenv.get("SUPABASE_ANON_KEY");
+            this.supabaseUrl = dotenv.get("SUPABASE_URL");
+            this.supabaseKey = dotenv.get("SUPABASE_ANON_KEY");
 
-        plugin.getLogger().info("Supabase Manager initialized");
+            if (this.supabaseUrl == null || this.supabaseKey == null) {
+                plugin.getLogger().warning("Supabase credentials not found in .env file!");
+                plugin.getLogger().warning("Please create a .env file in the server root with:");
+                plugin.getLogger().warning("SUPABASE_URL=your_url");
+                plugin.getLogger().warning("SUPABASE_ANON_KEY=your_key");
+
+                this.supabaseUrl = "";
+                this.supabaseKey = "";
+            } else {
+                plugin.getLogger().info("Supabase Manager initialized successfully");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Could not load .env file: " + e.getMessage());
+            plugin.getLogger().warning("Please create a .env file in the server root directory");
+            this.supabaseUrl = "";
+            this.supabaseKey = "";
+        }
     }
 
     public CompletableFuture<JsonObject> executeQuery(String table, String operation, JsonObject data) {
