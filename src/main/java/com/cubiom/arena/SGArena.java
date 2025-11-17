@@ -1,13 +1,9 @@
 package com.cubiom.arena;
 
-import com.cubiom.Cubiom;
 import com.cubiom.core.GameType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,106 +120,10 @@ public class SGArena extends Arena {
 
     @Override
     public void saveToConfig() {
-        File file = new File(Cubiom.getInstance().getDataFolder(), "arenas/sg/" + name + ".yml");
-        file.getParentFile().mkdirs();
-        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-        config.set("name", name);
-        config.set("enabled", enabled);
-        config.set("world", worldName);
-        config.set("min-players", minPlayers);
-        config.set("max-players", maxPlayers);
-        config.set("solo-only", soloOnly);
-
-        List<String> spawnList = new ArrayList<>();
-        for (Location loc : playerSpawns) {
-            spawnList.add(serializeLocation(loc));
-        }
-        config.set("player-spawns", spawnList);
-
-        List<String> tier1List = new ArrayList<>();
-        for (Location loc : tier1Chests) {
-            tier1List.add(serializeLocation(loc));
-        }
-        config.set("tier1-chests", tier1List);
-
-        List<String> tier2List = new ArrayList<>();
-        for (Location loc : tier2Chests) {
-            tier2List.add(serializeLocation(loc));
-        }
-        config.set("tier2-chests", tier2List);
-
-        List<String> dmList = new ArrayList<>();
-        for (Location loc : deathmatchSpawns) {
-            dmList.add(serializeLocation(loc));
-        }
-        config.set("deathmatch-spawns", dmList);
-
-        if (spectatorSpawn != null) {
-            config.set("spectator-spawn", serializeLocation(spectatorSpawn));
-        }
-
-        for (Map.Entry<String, Boolean> entry : gameRules.entrySet()) {
-            config.set("gamerules." + entry.getKey(), entry.getValue());
-        }
-
-        try {
-            config.save(file);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
     public void loadFromConfig() {
-        File file = new File(Cubiom.getInstance().getDataFolder(), "arenas/sg/" + name + ".yml");
-        if (!file.exists()) return;
-
-        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-        enabled = config.getBoolean("enabled", false);
-        worldName = config.getString("world");
-        minPlayers = config.getInt("min-players", 8);
-        maxPlayers = config.getInt("max-players", 24);
-        soloOnly = config.getBoolean("solo-only", true);
-
-        playerSpawns.clear();
-        if (config.contains("player-spawns")) {
-            for (String s : config.getStringList("player-spawns")) {
-                playerSpawns.add(deserializeLocation(s));
-            }
-        }
-
-        tier1Chests.clear();
-        if (config.contains("tier1-chests")) {
-            for (String s : config.getStringList("tier1-chests")) {
-                tier1Chests.add(deserializeLocation(s));
-            }
-        }
-
-        tier2Chests.clear();
-        if (config.contains("tier2-chests")) {
-            for (String s : config.getStringList("tier2-chests")) {
-                tier2Chests.add(deserializeLocation(s));
-            }
-        }
-
-        deathmatchSpawns.clear();
-        if (config.contains("deathmatch-spawns")) {
-            for (String s : config.getStringList("deathmatch-spawns")) {
-                deathmatchSpawns.add(deserializeLocation(s));
-            }
-        }
-
-        if (config.contains("spectator-spawn")) {
-            spectatorSpawn = deserializeLocation(config.getString("spectator-spawn"));
-        }
-
-        if (config.contains("gamerules")) {
-            for (String key : config.getConfigurationSection("gamerules").getKeys(false)) {
-                gameRules.put(key, config.getBoolean("gamerules." + key));
-            }
-        }
     }
 
     private String serializeLocation(Location loc) {

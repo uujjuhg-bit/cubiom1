@@ -1,13 +1,8 @@
 package com.cubiom.arena;
 
-import com.cubiom.Cubiom;
 import com.cubiom.core.GameType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-
-import java.io.File;
 
 public class DuelArena extends Arena {
 
@@ -78,42 +73,10 @@ public class DuelArena extends Arena {
 
     @Override
     public void saveToConfig() {
-        File file = new File(Cubiom.getInstance().getDataFolder(), "arenas/duels/" + name + ".yml");
-        file.getParentFile().mkdirs();
-        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-        config.set("name", name);
-        config.set("enabled", enabled);
-        config.set("world", worldName);
-
-        if (corner1 != null) config.set("corner1", serializeLocation(corner1));
-        if (corner2 != null) config.set("corner2", serializeLocation(corner2));
-        if (spawn1 != null) config.set("spawn1", serializeLocation(spawn1));
-        if (spawn2 != null) config.set("spawn2", serializeLocation(spawn2));
-        if (spectatorSpawn != null) config.set("spectator-spawn", serializeLocation(spectatorSpawn));
-
-        try {
-            config.save(file);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
     public void loadFromConfig() {
-        File file = new File(Cubiom.getInstance().getDataFolder(), "arenas/duels/" + name + ".yml");
-        if (!file.exists()) return;
-
-        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-        enabled = config.getBoolean("enabled", false);
-        worldName = config.getString("world");
-
-        if (config.contains("corner1")) corner1 = deserializeLocation(config.getString("corner1"));
-        if (config.contains("corner2")) corner2 = deserializeLocation(config.getString("corner2"));
-        if (config.contains("spawn1")) spawn1 = deserializeLocation(config.getString("spawn1"));
-        if (config.contains("spawn2")) spawn2 = deserializeLocation(config.getString("spawn2"));
-        if (config.contains("spectator-spawn")) spectatorSpawn = deserializeLocation(config.getString("spectator-spawn"));
     }
 
     private String serializeLocation(Location loc) {
