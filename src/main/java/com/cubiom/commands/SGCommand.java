@@ -295,7 +295,7 @@ public class SGCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        Block target = player.getTargetBlock(null, 5);
+        Block target = player.getTargetBlock((java.util.Set<Material>) null, 5);
         if (target == null || target.getType() != Material.CHEST) {
             player.sendMessage(lang.getMessage(player, "sg.error.not-looking-at-chest"));
             return true;
@@ -317,7 +317,7 @@ public class SGCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        Block target = player.getTargetBlock(null, 5);
+        Block target = player.getTargetBlock((java.util.Set<Material>) null, 5);
         if (target == null || target.getType() != Material.CHEST) {
             player.sendMessage(lang.getMessage(player, "sg.error.not-looking-at-chest"));
             return true;

@@ -80,7 +80,7 @@ public class CubiomCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GOLD + "=== Cubiom Plugin ===");
         sender.sendMessage(ChatColor.YELLOW + "Version: " + ChatColor.WHITE + plugin.getDescription().getVersion());
         sender.sendMessage(ChatColor.YELLOW + "Author: " + ChatColor.WHITE + String.join(", ", plugin.getDescription().getAuthors()));
-        sender.sendMessage(ChatColor.YELLOW + "API Version: " + ChatColor.WHITE + plugin.getDescription().getAPIVersion());
+        sender.sendMessage(ChatColor.YELLOW + "Minecraft: " + ChatColor.WHITE + "1.8.8");
         return true;
     }
 
