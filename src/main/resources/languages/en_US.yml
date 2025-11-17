@@ -174,6 +174,11 @@ tablist:
 motd:
   join: "&7&m                                   \n&b&lWelcome to Cubiom!\n&7Use hotbar items to play\n&7&m                                   "
 
+messages:
+  join-message: "&7[&a+&7] &e{player}"
+  quit-message: "&7[&c-&7] &e{player}"
+  right-click-player: "&7Right-click a player with &6Iron Sword &7to duel them!"
+
 gui:
   lobby-menu: "&b&lCubiom Lobby"
   sg-menu: "&b&lSurvival Games"

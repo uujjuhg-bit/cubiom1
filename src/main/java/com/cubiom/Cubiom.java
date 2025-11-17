@@ -1,19 +1,16 @@
 package com.cubiom;
 
-import com.cubiom.api.ConfigManager;
-import com.cubiom.api.DataManager;
-import com.cubiom.commands.*;
-import com.cubiom.gamemodes.duels.DuelManager;
-import com.cubiom.gamemodes.sg.SGManager;
-import com.cubiom.inventory.GUIManager;
+import com.cubiom.arena.ArenaManager;
+import com.cubiom.commands.DuelCommand;
+import com.cubiom.commands.SGCommand;
+import com.cubiom.database.SupabaseManager;
+import com.cubiom.game.duel.DuelManager;
+import com.cubiom.game.sg.SGManager;
 import com.cubiom.language.LanguageManager;
 import com.cubiom.listeners.*;
-import com.cubiom.stats.LeaderboardManager;
-import com.cubiom.stats.StatsManager;
-import com.cubiom.utils.HotbarManager;
-import com.cubiom.utils.ScoreboardManager;
-import com.cubiom.utils.TabListManager;
-import com.cubiom.utils.WorldManager;
+import com.cubiom.player.PlayerManager;
+import com.cubiom.ui.GUIManager;
+import com.cubiom.ui.ScoreboardManager;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,55 +18,37 @@ public class Cubiom extends JavaPlugin {
 
     private static Cubiom instance;
 
-    private ConfigManager configManager;
-    private DataManager dataManager;
+    private SupabaseManager supabaseManager;
     private LanguageManager languageManager;
-    private StatsManager statsManager;
+    private PlayerManager playerManager;
+    private ArenaManager arenaManager;
     private SGManager sgManager;
     private DuelManager duelManager;
     private GUIManager guiManager;
-    private HotbarManager hotbarManager;
-    private WorldManager worldManager;
     private ScoreboardManager scoreboardManager;
-    private TabListManager tabListManager;
-    private LeaderboardManager leaderboardManager;
 
     @Override
     public void onEnable() {
         instance = this;
 
-        getLogger().info("Enabling Cubiom v1.0...");
+        getLogger().info("Enabling Cubiom v2.0...");
 
         try {
             saveDefaultConfig();
 
-            configManager = new ConfigManager(this);
-            configManager.load();
-
-            dataManager = new DataManager(this);
-            dataManager.load();
-
+            supabaseManager = new SupabaseManager(this);
             languageManager = new LanguageManager(this);
-            languageManager.load();
-
-            statsManager = new StatsManager(this);
-            statsManager.load();
-
+            playerManager = new PlayerManager(this);
+            arenaManager = new ArenaManager(this);
             sgManager = new SGManager(this);
             duelManager = new DuelManager(this);
-
             guiManager = new GUIManager(this);
-            hotbarManager = new HotbarManager(this);
-            worldManager = new WorldManager(this);
             scoreboardManager = new ScoreboardManager(this);
-            tabListManager = new TabListManager(this);
-            leaderboardManager = new LeaderboardManager(this);
+
+            arenaManager.loadArenas();
 
             registerCommands();
             registerListeners();
-
-            startAutoSave();
-            startUpdaters();
 
             getLogger().info("Cubiom enabled successfully!");
 
@@ -93,12 +72,16 @@ public class Cubiom extends JavaPlugin {
                 duelManager.shutdown();
             }
 
-            if (statsManager != null) {
-                statsManager.save();
+            if (playerManager != null) {
+                playerManager.shutdown();
             }
 
-            if (dataManager != null) {
-                dataManager.save();
+            if (scoreboardManager != null) {
+                scoreboardManager.shutdown();
+            }
+
+            if (supabaseManager != null) {
+                supabaseManager.shutdown();
             }
 
             getLogger().info("Cubiom disabled successfully!");
@@ -112,10 +95,6 @@ public class Cubiom extends JavaPlugin {
     private void registerCommands() {
         getCommand("sg").setExecutor(new SGCommand(this));
         getCommand("duel").setExecutor(new DuelCommand(this));
-        getCommand("lang").setExecutor(new LanguageCommand(this));
-        getCommand("cubiom").setExecutor(new CubiomCommand(this));
-        getCommand("top").setExecutor(new TopCommand(this));
-        getCommand("stats").setExecutor(new StatsCommand(this));
     }
 
     private void registerListeners() {
@@ -124,70 +103,32 @@ public class Cubiom extends JavaPlugin {
         pm.registerEvents(new PlayerJoinListener(this), this);
         pm.registerEvents(new PlayerQuitListener(this), this);
         pm.registerEvents(new PlayerDeathListener(this), this);
-        pm.registerEvents(new PlayerMoveListener(this), this);
-        pm.registerEvents(new BlockBreakListener(this), this);
-        pm.registerEvents(new BlockPlaceListener(this), this);
-        pm.registerEvents(new InventoryClickListener(this), this);
         pm.registerEvents(new PlayerInteractListener(this), this);
         pm.registerEvents(new PlayerInteractEntityListener(this), this);
         pm.registerEvents(new EntityDamageListener(this), this);
-    }
-
-    private void startAutoSave() {
-        int saveInterval = getConfig().getInt("stats.save-interval", 300) * 20;
-
-        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-            try {
-                statsManager.save();
-                dataManager.save();
-            } catch (Exception e) {
-                getLogger().warning("Auto-save failed: " + e.getMessage());
-            }
-        }, saveInterval, saveInterval);
-    }
-
-    private void startUpdaters() {
-        getServer().getScheduler().runTaskTimer(this, () -> {
-            tabListManager.updateAllTabLists();
-        }, 0L, 20L);
-
-        getServer().getScheduler().runTaskTimer(this, () -> {
-            scoreboardManager.updateAll();
-        }, 0L, 20L);
-    }
-
-    public void reload() {
-        try {
-            reloadConfig();
-            configManager.load();
-            dataManager.load();
-            languageManager.load();
-
-            getLogger().info("Cubiom reloaded successfully!");
-        } catch (Exception e) {
-            getLogger().severe("Failed to reload: " + e.getMessage());
-            e.printStackTrace();
-        }
+        pm.registerEvents(new InventoryClickListener(this), this);
+        pm.registerEvents(new BlockBreakListener(this), this);
+        pm.registerEvents(new BlockPlaceListener(this), this);
     }
 
     public static Cubiom getInstance() {
         return instance;
     }
 
-    public ConfigManager getConfigManager() {
-        return configManager;
-    }
-
-    public DataManager getDataManager() {
-        return dataManager;
+    public SupabaseManager getSupabaseManager() {
+        return supabaseManager;
     }
 
     public LanguageManager getLanguageManager() {
         return languageManager;
     }
 
-    public StatsManager getStatsManager() {
-        return statsManager;
+    public PlayerManager getPlayerManager() {
+        return playerManager;
+    }
+
+    public ArenaManager getArenaManager() {
+        return arenaManager;
     }
 
     public SGManager getSGManager() {
@@ -202,23 +143,7 @@ public class Cubiom extends JavaPlugin {
         return guiManager;
     }
 
-    public HotbarManager getHotbarManager() {
-        return hotbarManager;
-    }
-
-    public WorldManager getWorldManager() {
-        return worldManager;
-    }
-
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
-    }
-
-    public TabListManager getTabListManager() {
-        return tabListManager;
-    }
-
-    public LeaderboardManager getLeaderboardManager() {
-        return leaderboardManager;
     }
 }

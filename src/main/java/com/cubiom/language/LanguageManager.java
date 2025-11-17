@@ -43,8 +43,13 @@ public class LanguageManager {
     }
 
     public String getMessage(Player player, String key) {
-        UUID uuid = player.getUniqueId();
-        String lang = plugin.getDataManager().getPlayerLanguage(uuid);
+        String lang = "en_US";
+        if (plugin.getPlayerManager() != null) {
+            com.cubiom.player.CubiomPlayer cp = plugin.getPlayerManager().getPlayer(player);
+            if (cp != null) {
+                lang = cp.getLanguage();
+            }
+        }
         return getMessage(lang, key);
     }
 
@@ -52,7 +57,7 @@ public class LanguageManager {
         YamlConfiguration config = languages.get(language);
 
         if (config == null) {
-            config = languages.get(plugin.getConfigManager().getDefaultLanguage());
+            config = languages.get("en_US");
         }
 
         String message = config.getString(key);
@@ -113,8 +118,13 @@ public class LanguageManager {
     }
 
     public java.util.List<String> getMessageList(Player player, String key) {
-        UUID uuid = player.getUniqueId();
-        String lang = plugin.getDataManager().getPlayerLanguage(uuid);
+        String lang = "en_US";
+        if (plugin.getPlayerManager() != null) {
+            com.cubiom.player.CubiomPlayer cp = plugin.getPlayerManager().getPlayer(player);
+            if (cp != null) {
+                lang = cp.getLanguage();
+            }
+        }
         return getMessageList(lang, key);
     }
 
@@ -122,7 +132,7 @@ public class LanguageManager {
         YamlConfiguration config = languages.get(language);
 
         if (config == null) {
-            config = languages.get(plugin.getConfigManager().getDefaultLanguage());
+            config = languages.get("en_US");
         }
 
         java.util.List<String> messages = config.getStringList(key);
