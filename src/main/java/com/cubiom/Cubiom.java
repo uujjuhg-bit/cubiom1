@@ -1,8 +1,8 @@
 package com.cubiom;
 
 import com.cubiom.arena.ArenaManager;
-import com.cubiom.commands.DuelCommand;
-import com.cubiom.commands.SGCommand;
+import com.cubiom.arena.ArenaSetupManager;
+import com.cubiom.commands.*;
 import com.cubiom.database.SupabaseManager;
 import com.cubiom.game.duel.DuelManager;
 import com.cubiom.game.sg.SGManager;
@@ -11,6 +11,7 @@ import com.cubiom.listeners.*;
 import com.cubiom.player.PlayerManager;
 import com.cubiom.ui.GUIManager;
 import com.cubiom.ui.ScoreboardManager;
+import com.cubiom.world.RollbackManager;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,6 +23,8 @@ public class Cubiom extends JavaPlugin {
     private LanguageManager languageManager;
     private PlayerManager playerManager;
     private ArenaManager arenaManager;
+    private ArenaSetupManager arenaSetupManager;
+    private RollbackManager rollbackManager;
     private SGManager sgManager;
     private DuelManager duelManager;
     private GUIManager guiManager;
@@ -43,6 +46,8 @@ public class Cubiom extends JavaPlugin {
 
             playerManager = new PlayerManager(this);
             arenaManager = new ArenaManager(this);
+            arenaSetupManager = new ArenaSetupManager(this);
+            rollbackManager = new RollbackManager(this);
             sgManager = new SGManager(this);
             duelManager = new DuelManager(this);
             guiManager = new GUIManager(this);
@@ -83,6 +88,14 @@ public class Cubiom extends JavaPlugin {
                 scoreboardManager.shutdown();
             }
 
+            if (arenaSetupManager != null) {
+                arenaSetupManager.shutdown();
+            }
+
+            if (rollbackManager != null) {
+                rollbackManager.shutdown();
+            }
+
             if (supabaseManager != null) {
                 supabaseManager.shutdown();
             }
@@ -98,6 +111,10 @@ public class Cubiom extends JavaPlugin {
     private void registerCommands() {
         getCommand("sg").setExecutor(new SGCommand(this));
         getCommand("duel").setExecutor(new DuelCommand(this));
+        getCommand("lang").setExecutor(new LanguageCommand(this));
+        getCommand("cubiom").setExecutor(new CubiomCommand(this));
+        getCommand("top").setExecutor(new TopCommand(this));
+        getCommand("stats").setExecutor(new StatsCommand(this));
     }
 
     private void registerListeners() {
@@ -148,5 +165,13 @@ public class Cubiom extends JavaPlugin {
 
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
+    }
+
+    public ArenaSetupManager getArenaSetupManager() {
+        return arenaSetupManager;
+    }
+
+    public RollbackManager getRollbackManager() {
+        return rollbackManager;
     }
 }
