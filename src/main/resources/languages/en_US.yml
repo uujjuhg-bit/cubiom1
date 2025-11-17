@@ -12,8 +12,11 @@ general:
   returning-to-lobby: "&aReturning to lobby..."
 
 language:
-  changed: "&a&l✓ &aLanguage changed successfully!"
-  current: "&7Current language: &b{language}"
+  changed: "&a&l✓ &aLanguage changed to {0}!"
+  current: "&7Current language: &b{0}"
+  available: "&7Available languages:"
+  invalid: "&cInvalid language code: {0}"
+  usage: "&7Usage: /lang set <code>"
 
 sg:
   join-success: "&aYou joined Survival Games!"
@@ -254,3 +257,139 @@ admin:
   arena-info-players: "&7Players: &b{min}-{max}"
   arena-info-spawns: "&7Spawns: &b{spawns}"
   arena-info-chests: "&7Chests: &bT1: {tier1} &7| &bT2: {tier2}"
+
+error:
+  player-only: "&cThis command can only be used by players!"
+  no-permission: "&cYou don't have permission!"
+  unknown-command: "&cUnknown command!"
+  player-not-found: "&cPlayer {0} not found!"
+  invalid-number: "&cInvalid number!"
+
+general:
+  yes: "Yes"
+  no: "No"
+  enabled: "Enabled"
+  disabled: "Disabled"
+
+sg:
+  left-game: "&aYou left the game!"
+  usage:
+    create: "&cUsage: /sg create <name>"
+    delete: "&cUsage: /sg delete <name>"
+    enable: "&cUsage: /sg enable <name>"
+    disable: "&cUsage: /sg disable <name>"
+    info: "&cUsage: /sg info <name>"
+    setmin: "&cUsage: /sg setmin <number>"
+    setmax: "&cUsage: /sg setmax <number>"
+  error:
+    arena-exists: "&cArena {0} already exists!"
+    arena-not-found: "&cArena {0} not found!"
+    arena-invalid: "&cArena is not valid! Missing required components."
+    no-setup-session: "&cYou don't have an active setup session! Use /sg create first."
+    not-looking-at-chest: "&cYou must be looking at a chest!"
+    min-too-low: "&cMinimum players must be at least 2!"
+    max-too-low: "&cMaximum players must be at least 2!"
+  setup:
+    started: "&aStarted setup for arena {0}"
+    help: "&7Use setup commands to configure the arena"
+    complete: "&aArena {0} setup complete!"
+    incomplete: "&cArena is incomplete! Missing required components."
+  arena-deleted: "&aArena {0} deleted!"
+  arena-enabled: "&aArena {0} enabled!"
+  arena-disabled: "&aArena {0} disabled!"
+  no-arenas: "&cNo arenas found!"
+  arena-list-header: "&b&lSG Arenas:"
+  setup-cancelled: "&cSetup cancelled!"
+  setup:
+    lobby-set: "&aLobby spawn set!"
+    spawn-added: "&aSpawn point added! Total: {0}"
+    tier1-added: "&aTier 1 chest added! Total: {0}"
+    tier2-added: "&aTier 2 chest added! Total: {0}"
+    deathmatch-set: "&aDeathmatch spawn set!"
+    spectator-set: "&aSpectator spawn set!"
+    min-set: "&aMinimum players set to {0}!"
+    max-set: "&aMaximum players set to {0}!"
+  info:
+    world: "World"
+    enabled: "Enabled"
+    players: "Players"
+    spawns: "Spawns"
+    tier1: "Tier 1 Chests"
+    tier2: "Tier 2 Chests"
+    deathmatch: "Deathmatch Spawns"
+    valid: "Valid"
+  help:
+    title: "SG Commands"
+    join: "Join an arena"
+    leave: "Leave your game"
+    list: "List all arenas"
+    info: "Show arena info"
+    admin: "&6Admin Commands:"
+    create: "Create new arena"
+    delete: "Delete arena"
+    enable: "Enable arena"
+    disable: "Disable arena"
+
+duel:
+  left-queue: "&aYou left the queue!"
+  usage:
+    create: "&cUsage: /duel create <name>"
+    delete: "&cUsage: /duel delete <name>"
+    enable: "&cUsage: /duel enable <name>"
+    disable: "&cUsage: /duel disable <name>"
+    info: "&cUsage: /duel info <name>"
+    invite: "&cUsage: /duel invite <player> <kit>"
+  error:
+    arena-exists: "&cArena {0} already exists!"
+    arena-not-found: "&cArena {0} not found!"
+    arena-invalid: "&cArena is not valid! Missing required components."
+    no-setup-session: "&cYou don't have an active setup session! Use /duel create first."
+  setup:
+    started: "&aStarted setup for arena {0}"
+    help: "&7Use /duel setpos1, setpos2, setspawn1, setspawn2, then /duel complete"
+    complete: "&aArena {0} setup complete!"
+    incomplete: "&cArena is incomplete! Missing required components."
+  arena-deleted: "&aArena {0} deleted!"
+  arena-enabled: "&aArena {0} enabled!"
+  arena-disabled: "&aArena {0} disabled!"
+  no-arenas: "&cNo arenas found!"
+  arena-list-header: "&b&lDuel Arenas:"
+  setup-cancelled: "&cSetup cancelled!"
+  info:
+    world: "World"
+    enabled: "Enabled"
+    in-use: "In Use"
+    valid: "Valid"
+  help:
+    title: "Duel Commands"
+    join: "Join queue for a kit"
+    leave: "Leave queue"
+    invite: "Invite player to duel"
+    accept: "Accept duel invite"
+    decline: "Decline duel invite"
+    list: "List all arenas"
+    admin: "&6Admin Commands:"
+    create: "Create new arena"
+    delete: "Delete arena"
+    enable: "Enable arena"
+    disable: "Disable arena"
+
+arena:
+  setup:
+    corner1-set: "&aCorner 1 set!"
+    corner2-set: "&aCorner 2 set!"
+
+cubiom:
+  reloading: "&eReloading plugin..."
+  reloaded: "&aPlugin reloaded in {0}ms!"
+  lobby-set: "&aLobby spawn set!"
+  help:
+    title: "Cubiom Help"
+    main: "Show plugin info"
+    version: "Show plugin version"
+    help: "Show this help"
+    admin: "&6Admin Commands:"
+    reload: "Reload plugin"
+    setlobby: "Set lobby spawn"
+
+join-message: "&7[&a+&7] &e{player}"
