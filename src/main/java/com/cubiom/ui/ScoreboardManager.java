@@ -26,7 +26,7 @@ public class ScoreboardManager {
     }
 
     public void createScoreboard(Player player) {
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
+        org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard board = manager.getNewScoreboard();
         Objective obj = board.registerNewObjective("cubiom", "dummy");
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
