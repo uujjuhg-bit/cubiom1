@@ -10,6 +10,8 @@ general:
   reload-success: "&aPlugin reloaded successfully!"
   teleporting: "&aTeleporting..."
   returning-to-lobby: "&aReturning to lobby..."
+  join-message: "&7[&a+&7] &e{player}"
+  quit-message: "&7[&c-&7] &e{player}"
 
 language:
   changed: "&a&l✓ &aLanguage changed to {0}!"

@@ -15,6 +15,7 @@ public class CubiomPlayer {
     private String currentArena;
     private String selectedKit;
     private String language;
+    private boolean playersVisible;
     private final Map<String, Integer> stats;
     private final Map<String, Long> cooldowns;
 
@@ -25,6 +26,7 @@ public class CubiomPlayer {
         this.stats = new HashMap<>();
         this.cooldowns = new HashMap<>();
         this.language = "en_US";
+        this.playersVisible = true;
     }
 
     public UUID getUuid() {
@@ -98,5 +100,13 @@ public class CubiomPlayer {
 
     public boolean isSpectating() {
         return state == PlayerState.SPECTATING;
+    }
+
+    public boolean arePlayersVisible() {
+        return playersVisible;
+    }
+
+    public void setPlayersVisible(boolean visible) {
+        this.playersVisible = visible;
     }
 }

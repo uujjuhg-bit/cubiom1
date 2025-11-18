@@ -134,8 +134,6 @@ public class GUIManager {
         addGlow(quickJoin);
         inv.setItem(size - 5, quickJoin);
 
-        inv.setItem(size - 1, BACK_ITEM);
-
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
@@ -205,8 +203,6 @@ public class GUIManager {
             );
             inv.setItem(4, targetInfo);
         }
-
-        inv.setItem(53, BACK_ITEM);
 
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
@@ -285,8 +281,6 @@ public class GUIManager {
         addGlow(duelItem);
         inv.setItem(24, duelItem);
 
-        inv.setItem(53, BACK_ITEM);
-
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
@@ -342,8 +336,6 @@ public class GUIManager {
             slot++;
             if (slot % 9 >= 7) slot += 2;
         }
-
-        inv.setItem(size - 1, BACK_ITEM);
 
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
@@ -405,8 +397,6 @@ public class GUIManager {
             ChatColor.YELLOW + "Click to change!"
         );
         inv.setItem(13, language);
-
-        inv.setItem(26, BACK_ITEM);
 
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);

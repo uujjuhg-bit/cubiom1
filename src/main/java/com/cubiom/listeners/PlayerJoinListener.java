@@ -25,11 +25,22 @@ public class PlayerJoinListener implements Listener {
 
         CubiomPlayer cubiomPlayer = plugin.getPlayerManager().addPlayer(player);
 
-        plugin.getSupabaseManager().upsertPlayer(
-            player.getUniqueId().toString(),
-            player.getName(),
-            cubiomPlayer.getLanguage()
-        );
+        plugin.getSupabaseManager().loadPlayerData(player.getUniqueId().toString()).thenAccept(jsonObject -> {
+            if (jsonObject != null && jsonObject.has("language")) {
+                String loadedLang = jsonObject.get("language").getAsString();
+                cubiomPlayer.setLanguage(loadedLang);
+            }
+
+            plugin.getSupabaseManager().upsertPlayer(
+                player.getUniqueId().toString(),
+                player.getName(),
+                cubiomPlayer.getLanguage()
+            );
+
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                plugin.getScoreboardManager().updateScoreboard(player);
+            });
+        });
 
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20.0);
@@ -45,8 +56,8 @@ public class PlayerJoinListener implements Listener {
 
         plugin.getScoreboardManager().createScoreboard(player);
 
-        event.setJoinMessage(plugin.getLanguageManager().getMessage(cubiomPlayer.getLanguage(), "join-message")
-            .replace("%player%", player.getName()));
+        event.setJoinMessage(plugin.getLanguageManager().getMessage(cubiomPlayer.getLanguage(), "general.join-message")
+            .replace("{player}", player.getName()));
     }
 
     private Location deserializeLocation(String s) {

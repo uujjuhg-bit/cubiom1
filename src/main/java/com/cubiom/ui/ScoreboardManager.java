@@ -79,14 +79,18 @@ public class ScoreboardManager {
     }
 
     private void updateLobbyScoreboard(Player player, Objective obj) {
-        setScore(obj, ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + "--------------------", 10);
-        setScore(obj, ChatColor.WHITE + "Online: " + ChatColor.GREEN + Bukkit.getOnlinePlayers().size(), 9);
-        setScore(obj, "", 8);
-        setScore(obj, ChatColor.YELLOW + "Your Stats:", 7);
-        setScore(obj, ChatColor.WHITE + "SG Wins: " + ChatColor.GREEN + "0", 6);
-        setScore(obj, ChatColor.WHITE + "Duel ELO: " + ChatColor.GREEN + "1000", 5);
-        setScore(obj, " ", 4);
-        setScore(obj, ChatColor.GRAY + "cubiom.net", 3);
+        CubiomPlayer cp = plugin.getPlayerManager().getPlayer(player);
+        String langDisplay = plugin.getLanguageManager().getLanguageName(cp != null ? cp.getLanguage() : "en_US");
+
+        setScore(obj, ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + "--------------------", 11);
+        setScore(obj, ChatColor.WHITE + "Online: " + ChatColor.GREEN + Bukkit.getOnlinePlayers().size(), 10);
+        setScore(obj, "", 9);
+        setScore(obj, ChatColor.YELLOW + "Your Stats:", 8);
+        setScore(obj, ChatColor.WHITE + "SG Wins: " + ChatColor.GREEN + "0", 7);
+        setScore(obj, ChatColor.WHITE + "Duel ELO: " + ChatColor.GREEN + "1000", 6);
+        setScore(obj, " ", 5);
+        setScore(obj, ChatColor.GRAY + "Language: " + ChatColor.WHITE + langDisplay, 4);
+        setScore(obj, "  ", 3);
         setScore(obj, ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + "--------------------", 2);
     }
 

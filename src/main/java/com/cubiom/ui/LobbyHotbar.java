@@ -33,8 +33,8 @@ public class LobbyHotbar {
         playerHead.setItemMeta(headMeta);
         player.getInventory().setItem(4, playerHead);
 
-        player.getInventory().setItem(6, createItem(Material.EMERALD, ChatColor.GREEN + "Active Players",
-            ChatColor.GRAY + "See online players"));
+        player.getInventory().setItem(6, createItem(Material.INK_SACK, 10, ChatColor.GREEN + "Players: Visible",
+            ChatColor.GRAY + "Click to hide players"));
 
         player.getInventory().setItem(7, createItem(Material.GOLD_INGOT, ChatColor.GOLD + "Leaderboards",
             ChatColor.GRAY + "View top players"));
@@ -47,6 +47,17 @@ public class LobbyHotbar {
 
     private static ItemStack createItem(Material material, String name, String... lore) {
         ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        if (lore.length > 0) {
+            meta.setLore(java.util.Arrays.asList(lore));
+        }
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private static ItemStack createItem(Material material, int data, String name, String... lore) {
+        ItemStack item = new ItemStack(material, 1, (short) data);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         if (lore.length > 0) {
