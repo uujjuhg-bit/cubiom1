@@ -4,6 +4,7 @@ import com.cubiom.Cubiom;
 import com.cubiom.core.GameType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -39,8 +40,9 @@ public class ArenaManager {
 
         try (FileReader reader = new FileReader(file)) {
             JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
-            for (String name : json.keySet()) {
-                SGArena arena = SGArena.fromJSON(name, json.getAsJsonObject(name));
+            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                String name = entry.getKey();
+                SGArena arena = SGArena.fromJSON(name, entry.getValue().getAsJsonObject());
                 if (arena != null) {
                     sgArenas.put(name, arena);
                 }
@@ -56,8 +58,9 @@ public class ArenaManager {
 
         try (FileReader reader = new FileReader(file)) {
             JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
-            for (String name : json.keySet()) {
-                DuelArena arena = DuelArena.fromJSON(name, json.getAsJsonObject(name));
+            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                String name = entry.getKey();
+                DuelArena arena = DuelArena.fromJSON(name, entry.getValue().getAsJsonObject());
                 if (arena != null) {
                     duelArenas.put(name, arena);
                 }
