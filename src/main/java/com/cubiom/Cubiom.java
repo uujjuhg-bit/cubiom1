@@ -10,6 +10,7 @@ import com.cubiom.language.LanguageManager;
 import com.cubiom.listeners.*;
 import com.cubiom.player.PlayerManager;
 import com.cubiom.ui.GUIManager;
+import com.cubiom.ui.LobbyHotbar;
 import com.cubiom.ui.ScoreboardManager;
 import com.cubiom.world.RollbackManager;
 import org.bukkit.plugin.PluginManager;
@@ -29,6 +30,7 @@ public class Cubiom extends JavaPlugin {
     private DuelManager duelManager;
     private GUIManager guiManager;
     private ScoreboardManager scoreboardManager;
+    private LobbyHotbar lobbyHotbar;
 
     @Override
     public void onEnable() {
@@ -52,6 +54,7 @@ public class Cubiom extends JavaPlugin {
             duelManager = new DuelManager(this);
             guiManager = new GUIManager(this);
             scoreboardManager = new ScoreboardManager(this);
+            lobbyHotbar = new LobbyHotbar();
 
             arenaManager.loadArenas();
 
@@ -177,5 +180,9 @@ public class Cubiom extends JavaPlugin {
 
     public RollbackManager getRollbackManager() {
         return rollbackManager;
+    }
+
+    public LobbyHotbar getLobbyHotbar() {
+        return lobbyHotbar;
     }
 }

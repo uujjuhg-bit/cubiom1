@@ -313,6 +313,10 @@ public class DuelManager {
         return false;
     }
 
+    public List<DuelGame> getActiveGames() {
+        return activeGames;
+    }
+
     public void shutdown() {
         for (DuelGame game : new ArrayList<>(activeGames)) {
             game.getArena().setInUse(false);
