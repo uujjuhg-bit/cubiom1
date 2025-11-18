@@ -124,7 +124,6 @@ public class InventoryClickListener implements Listener {
             else if (displayName.contains("Español")) langCode = "es_ES";
 
             if (langCode != null) {
-                CubiomPlayer cp = plugin.getPlayerManager().getPlayer(player);
                 cp.setLanguage(langCode);
                 plugin.getSupabaseManager().upsertPlayer(
                     player.getUniqueId().toString(),
