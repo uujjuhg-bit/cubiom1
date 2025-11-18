@@ -116,12 +116,29 @@ public class Cubiom extends JavaPlugin {
     }
 
     private void registerCommands() {
-        getCommand("sg").setExecutor(new SGCommand(this));
-        getCommand("duel").setExecutor(new DuelCommand(this));
-        getCommand("lang").setExecutor(new LanguageCommand(this));
-        getCommand("cubiom").setExecutor(new CubiomCommand(this));
-        getCommand("top").setExecutor(new TopCommand(this));
-        getCommand("stats").setExecutor(new StatsCommand(this));
+        SGCommand sgCmd = new SGCommand(this);
+        getCommand("sg").setExecutor(sgCmd);
+        getCommand("sg").setTabCompleter(sgCmd);
+
+        DuelCommand duelCmd = new DuelCommand(this);
+        getCommand("duel").setExecutor(duelCmd);
+        getCommand("duel").setTabCompleter(duelCmd);
+
+        LanguageCommand langCmd = new LanguageCommand(this);
+        getCommand("lang").setExecutor(langCmd);
+        getCommand("lang").setTabCompleter(langCmd);
+
+        CubiomCommand cubiomCmd = new CubiomCommand(this);
+        getCommand("cubiom").setExecutor(cubiomCmd);
+        getCommand("cubiom").setTabCompleter(cubiomCmd);
+
+        TopCommand topCmd = new TopCommand(this);
+        getCommand("top").setExecutor(topCmd);
+        getCommand("top").setTabCompleter(topCmd);
+
+        StatsCommand statsCmd = new StatsCommand(this);
+        getCommand("stats").setExecutor(statsCmd);
+        getCommand("stats").setTabCompleter(statsCmd);
     }
 
     private void registerListeners() {
