@@ -146,8 +146,8 @@ public class DuelGame {
     }
 
     private int calculateELO(Player player, Player opponent, boolean won) {
-        int currentELO = 1000;
-        int opponentELO = 1000;
+        int currentELO = getPlayerELO(player);
+        int opponentELO = getPlayerELO(opponent);
 
         double expectedScore = 1.0 / (1.0 + Math.pow(10.0, (opponentELO - currentELO) / 400.0));
         int actualScore = won ? 1 : 0;
@@ -155,6 +155,21 @@ public class DuelGame {
 
         int newELO = (int) Math.round(currentELO + K * (actualScore - expectedScore));
         return Math.max(100, newELO);
+    }
+
+    private int getPlayerELO(Player player) {
+        try {
+            com.google.gson.JsonObject stats = plugin.getSupabaseManager()
+                .loadDuelStats(player.getUniqueId().toString(), kit.getName().toLowerCase())
+                .join();
+
+            if (stats != null && stats.has("elo")) {
+                return stats.get("elo").getAsInt();
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to load ELO for " + player.getName());
+        }
+        return 1000;
     }
 
     private void cleanup() {

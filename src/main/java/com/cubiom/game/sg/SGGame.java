@@ -169,7 +169,27 @@ public class SGGame {
         }
 
         applyGameRules();
+        fillChests();
         startGracePeriod();
+    }
+
+    private void fillChests() {
+        World world = Bukkit.getWorld(arena.getWorldName());
+        if (world == null) return;
+
+        for (Location loc : arena.getTier1Chests()) {
+            if (loc.getBlock().getState() instanceof org.bukkit.block.Chest) {
+                org.bukkit.block.Chest chest = (org.bukkit.block.Chest) loc.getBlock().getState();
+                LootManager.fillTier1Chest(chest.getInventory());
+            }
+        }
+
+        for (Location loc : arena.getTier2Chests()) {
+            if (loc.getBlock().getState() instanceof org.bukkit.block.Chest) {
+                org.bukkit.block.Chest chest = (org.bukkit.block.Chest) loc.getBlock().getState();
+                LootManager.fillTier2Chest(chest.getInventory());
+            }
+        }
     }
 
     private void startGracePeriod() {
@@ -245,13 +265,25 @@ public class SGGame {
             broadcastMessage(ChatColor.GOLD + "" + ChatColor.BOLD + winner.getName() + " has won the game!");
             int playerKills = kills.getOrDefault(winner.getUniqueId(), 0);
             broadcastMessage(ChatColor.YELLOW + "Kills: " + playerKills);
-
-            plugin.getSupabaseManager().updateSGStats(
-                winner.getUniqueId().toString(),
-                1, playerKills, 0, 1
-            );
         } else {
             broadcastMessage(ChatColor.RED + "Game ended with no winner!");
+        }
+
+        for (UUID uuid : players) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null) continue;
+
+            int playerKills = kills.getOrDefault(uuid, 0);
+            int deaths = uuid.equals(winner != null ? winner.getUniqueId() : null) ? 0 : 1;
+            int wins = uuid.equals(winner != null ? winner.getUniqueId() : null) ? 1 : 0;
+
+            plugin.getSupabaseManager().updateSGStats(
+                uuid.toString(),
+                wins,
+                playerKills,
+                deaths,
+                1
+            );
         }
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -284,6 +316,7 @@ public class SGGame {
     private void giveHotbar(Player player) {
         player.getInventory().clear();
         player.setGameMode(GameMode.SURVIVAL);
+        plugin.getLobbyHotbar().giveHotbar(player);
     }
 
     private void broadcastMessage(String message) {
