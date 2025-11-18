@@ -26,23 +26,6 @@ public class PlayerJoinListener implements Listener {
 
         CubiomPlayer cubiomPlayer = plugin.getPlayerManager().addPlayer(player);
 
-        plugin.getSupabaseManager().loadPlayerData(player.getUniqueId().toString()).thenAccept(jsonObject -> {
-            if (jsonObject != null && jsonObject.has("language")) {
-                String loadedLang = jsonObject.get("language").getAsString();
-                cubiomPlayer.setLanguage(loadedLang);
-            }
-
-            plugin.getSupabaseManager().upsertPlayer(
-                player.getUniqueId().toString(),
-                player.getName(),
-                cubiomPlayer.getLanguage()
-            );
-
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                plugin.getScoreboardManager().updateScoreboard(player);
-            });
-        });
-
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20.0);
         player.setFoodLevel(20);
@@ -57,8 +40,25 @@ public class PlayerJoinListener implements Listener {
 
         plugin.getScoreboardManager().createScoreboard(player);
 
-        event.setJoinMessage(plugin.getLanguageManager().getMessage(cubiomPlayer.getLanguage(), "general.join-message")
+        event.setJoinMessage(plugin.getLanguageManager().getMessage(cubiomPlayer.getLanguage(), "messages.join-message")
             .replace("{player}", player.getName()));
+
+        plugin.getSupabaseManager().loadPlayerData(player.getUniqueId().toString()).thenAccept(jsonObject -> {
+            if (jsonObject != null && jsonObject.has("language")) {
+                String loadedLang = jsonObject.get("language").getAsString();
+                cubiomPlayer.setLanguage(loadedLang);
+
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    plugin.getScoreboardManager().updateScoreboard(player);
+                });
+            }
+
+            plugin.getSupabaseManager().upsertPlayer(
+                player.getUniqueId().toString(),
+                player.getName(),
+                cubiomPlayer.getLanguage()
+            );
+        });
     }
 
     private Location deserializeLocation(String s) {
