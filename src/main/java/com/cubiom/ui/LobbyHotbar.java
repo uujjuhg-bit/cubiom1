@@ -9,6 +9,10 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 public class LobbyHotbar {
 
+    public void giveHotbar(Player player) {
+        giveLobbyItems(player);
+    }
+
     public static void giveLobbyItems(Player player) {
         player.getInventory().clear();
 

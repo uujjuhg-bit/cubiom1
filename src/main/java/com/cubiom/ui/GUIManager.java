@@ -2,171 +2,444 @@ package com.cubiom.ui;
 
 import com.cubiom.Cubiom;
 import com.cubiom.arena.SGArena;
+import com.cubiom.core.PlayerState;
 import com.cubiom.game.duel.Kit;
 import com.cubiom.game.sg.SGGame;
+import com.cubiom.player.CubiomPlayer;
+import com.google.gson.JsonObject;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GUIManager {
 
     private final Cubiom plugin;
+    private static final ItemStack BORDER_ITEM = createBorderItem();
+    private static final ItemStack BACK_ITEM = createBackItem();
 
     public GUIManager(Cubiom plugin) {
         this.plugin = plugin;
     }
 
     public void openGameSelector(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Game Selector");
+        Inventory inv = Bukkit.createInventory(null, 27, ChatColor.BOLD + "Game Selector");
 
-        ItemStack sgItem = createItem(Material.DIAMOND_SWORD, ChatColor.GREEN + "Survival Games",
-            ChatColor.GRAY + "Battle 24 players",
-            ChatColor.GRAY + "Last one standing wins!",
-            ChatColor.YELLOW + "Click to view arenas");
+        fillBorders(inv, 27);
+
+        long sgPlaying = plugin.getSGManager().getActiveGames().values().stream()
+            .mapToInt(game -> game.getPlayers().size())
+            .sum();
+
+        long duelsPlaying = plugin.getDuelManager().getActiveGames().size() * 2;
+
+        ItemStack sgItem = createItem(
+            Material.DIAMOND_SWORD,
+            ChatColor.GREEN + "" + ChatColor.BOLD + "SURVIVAL GAMES",
+            "",
+            ChatColor.GRAY + "Battle up to 24 players in an",
+            ChatColor.GRAY + "epic fight for survival!",
+            "",
+            ChatColor.YELLOW + "▸ " + ChatColor.WHITE + sgPlaying + ChatColor.GRAY + " playing now",
+            "",
+            ChatColor.YELLOW + "Click to play!"
+        );
+        addGlow(sgItem);
         inv.setItem(11, sgItem);
 
-        ItemStack duelItem = createItem(Material.IRON_SWORD, ChatColor.LIGHT_PURPLE + "Duels",
-            ChatColor.GRAY + "1v1 PvP battles",
-            ChatColor.GRAY + "Test your skills!",
-            ChatColor.YELLOW + "Click to select kit");
+        ItemStack duelItem = createItem(
+            Material.IRON_SWORD,
+            ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "DUELS",
+            "",
+            ChatColor.GRAY + "Test your skills in intense",
+            ChatColor.GRAY + "1v1 combat across 6 unique kits!",
+            "",
+            ChatColor.YELLOW + "▸ " + ChatColor.WHITE + duelsPlaying + ChatColor.GRAY + " playing now",
+            "",
+            ChatColor.YELLOW + "Click to select kit!"
+        );
+        addGlow(duelItem);
         inv.setItem(15, duelItem);
 
         player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
 
     public void openSGArenaSelector(Player player) {
         List<SGArena> arenas = plugin.getArenaManager().getEnabledSGArenas();
 
-        int size = Math.min(54, ((arenas.size() + 8) / 9) * 9);
-        Inventory inv = Bukkit.createInventory(null, size, ChatColor.GREEN + "Select SG Arena");
+        if (arenas.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "✖ No SG arenas available!");
+            player.closeInventory();
+            return;
+        }
 
-        int slot = 0;
+        int size = Math.min(54, Math.max(27, ((arenas.size() + 9) / 9) * 9));
+        Inventory inv = Bukkit.createInventory(null, size, ChatColor.GREEN + "" + ChatColor.BOLD + "Survival Games");
+
+        fillBorders(inv, size);
+
+        int slot = 10;
         for (SGArena arena : arenas) {
             SGGame game = plugin.getSGManager().getActiveGames().get(arena.getName());
             int players = game != null ? game.getPlayers().size() : 0;
-            String status = game != null ? "In Progress" : "Waiting";
+            String stateStr = game != null ? game.getState().toString() : "WAITING";
 
-            ItemStack item = createItem(Material.MAP, ChatColor.AQUA + arena.getName(),
-                ChatColor.GRAY + "Players: " + players + "/" + arena.getMaxPlayers(),
-                ChatColor.GRAY + "Status: " + status,
-                ChatColor.YELLOW + "Click to join!");
-            inv.setItem(slot++, item);
+            Material icon = players == 0 ? Material.MAP :
+                           players < arena.getMaxPlayers() ? Material.EMPTY_MAP : Material.PAPER;
+
+            ChatColor color = players == 0 ? ChatColor.GREEN :
+                            players < arena.getMaxPlayers() ? ChatColor.YELLOW : ChatColor.RED;
+
+            List<String> lore = new ArrayList<>();
+            lore.add("");
+            lore.add(ChatColor.GRAY + "Players: " + color + players + ChatColor.DARK_GRAY + "/" + ChatColor.GRAY + arena.getMaxPlayers());
+            lore.add(ChatColor.GRAY + "Status: " + getStatusColor(stateStr) + stateStr);
+            lore.add("");
+
+            if (players >= arena.getMaxPlayers()) {
+                lore.add(ChatColor.RED + "✖ Arena Full!");
+            } else if (game != null && !stateStr.equals("WAITING")) {
+                lore.add(ChatColor.RED + "✖ Game in progress!");
+            } else {
+                lore.add(ChatColor.YELLOW + "Click to join!");
+            }
+
+            ItemStack item = createItem(icon, ChatColor.AQUA + "" + ChatColor.BOLD + arena.getName(),
+                lore.toArray(new String[0]));
+
+            inv.setItem(slot, item);
+            slot++;
+            if (slot % 9 >= 7) slot += 2;
         }
 
-        ItemStack quickJoin = createItem(Material.EMERALD, ChatColor.GREEN + "Quick Join",
-            ChatColor.GRAY + "Join any available game");
-        inv.setItem(size - 1, quickJoin);
+        ItemStack quickJoin = createItem(Material.EMERALD,
+            ChatColor.GREEN + "" + ChatColor.BOLD + "QUICK JOIN",
+            "",
+            ChatColor.GRAY + "Automatically join the best",
+            ChatColor.GRAY + "available game!",
+            "",
+            ChatColor.YELLOW + "Click to quick join!"
+        );
+        addGlow(quickJoin);
+        inv.setItem(size - 5, quickJoin);
+
+        inv.setItem(size - 1, BACK_ITEM);
 
         player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
 
     public void openKitSelector(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, ChatColor.LIGHT_PURPLE + "Select Duel Kit");
+        openKitSelector(player, null);
+    }
+
+    public void openKitSelector(Player player, String targetPlayerName) {
+        Inventory inv = Bukkit.createInventory(null, 54,
+            ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Select Duel Kit");
+
+        fillBorders(inv, 54);
 
         List<Kit> kits = Kit.getAllKits();
-        int slot = 10;
+        int[] slots = {19, 21, 23, 25, 28, 30};
 
-        for (Kit kit : kits) {
+        for (int i = 0; i < Math.min(kits.size(), slots.length); i++) {
+            Kit kit = kits.get(i);
+
+            JsonObject stats = plugin.getSupabaseManager()
+                .loadDuelStats(player.getUniqueId().toString(), kit.getName().toLowerCase())
+                .join();
+
+            int elo = stats != null && stats.has("elo") ? stats.get("elo").getAsInt() : 1000;
+            int wins = stats != null && stats.has("wins") ? stats.get("wins").getAsInt() : 0;
+            int losses = stats != null && stats.has("losses") ? stats.get("losses").getAsInt() : 0;
+            double winrate = (wins + losses) > 0 ? (wins * 100.0 / (wins + losses)) : 0;
+
             ItemStack item = new ItemStack(kit.getIcon());
             ItemMeta meta = item.getItemMeta();
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', kit.getDisplayName()));
 
             List<String> lore = new ArrayList<>();
+            lore.add("");
             for (String desc : kit.getDescription()) {
                 lore.add(ChatColor.translateAlternateColorCodes('&', desc));
             }
             lore.add("");
-            lore.add(ChatColor.YELLOW + "Click to join queue!");
-            meta.setLore(lore);
+            lore.add(ChatColor.GRAY + "Your Stats:");
+            lore.add(ChatColor.YELLOW + "  ELO: " + ChatColor.WHITE + elo);
+            lore.add(ChatColor.YELLOW + "  Wins: " + ChatColor.WHITE + wins + ChatColor.DARK_GRAY + " | " +
+                     ChatColor.YELLOW + "Losses: " + ChatColor.WHITE + losses);
+            lore.add(ChatColor.YELLOW + "  Win Rate: " + ChatColor.WHITE + String.format("%.1f%%", winrate));
+            lore.add("");
 
+            if (targetPlayerName != null) {
+                lore.add(ChatColor.YELLOW + "Click to duel " + targetPlayerName + "!");
+            } else {
+                lore.add(ChatColor.YELLOW + "Click to join queue!");
+            }
+
+            meta.setLore(lore);
             item.setItemMeta(meta);
-            inv.setItem(slot++, item);
+
+            inv.setItem(slots[i], item);
         }
 
+        if (targetPlayerName != null) {
+            ItemStack targetInfo = createItem(Material.SKULL_ITEM,
+                ChatColor.GOLD + "" + ChatColor.BOLD + "CHALLENGE",
+                "",
+                ChatColor.GRAY + "Challenging: " + ChatColor.WHITE + targetPlayerName,
+                "",
+                ChatColor.GRAY + "Select a kit to send",
+                ChatColor.GRAY + "your duel request!"
+            );
+            inv.setItem(4, targetInfo);
+        }
+
+        inv.setItem(53, BACK_ITEM);
+
         player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
 
     public void openPlayerProfile(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, ChatColor.YELLOW + player.getName() + "'s Profile");
+        Inventory inv = Bukkit.createInventory(null, 54,
+            ChatColor.YELLOW + "" + ChatColor.BOLD + player.getName() + "'s Profile");
 
-        ItemStack sgStats = createItem(Material.DIAMOND_SWORD, ChatColor.GREEN + "SG Stats",
-            ChatColor.GRAY + "Wins: 0",
-            ChatColor.GRAY + "Kills: 0",
-            ChatColor.GRAY + "Deaths: 0");
-        inv.setItem(11, sgStats);
+        fillBorders(inv, 54);
 
-        ItemStack duelStats = createItem(Material.IRON_SWORD, ChatColor.LIGHT_PURPLE + "Duel Stats",
-            ChatColor.GRAY + "Overall ELO: 1000",
-            ChatColor.GRAY + "Wins: 0",
-            ChatColor.GRAY + "Losses: 0");
-        inv.setItem(15, duelStats);
+        ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+        SkullMeta headMeta = (SkullMeta) head.getItemMeta();
+        headMeta.setOwner(player.getName());
+        headMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + player.getName());
+        headMeta.setLore(Arrays.asList(
+            "",
+            ChatColor.GRAY + "View your game statistics",
+            ChatColor.GRAY + "and achievements!"
+        ));
+        head.setItemMeta(headMeta);
+        inv.setItem(4, head);
+
+        JsonObject sgStats = plugin.getSupabaseManager()
+            .loadSGStats(player.getUniqueId().toString())
+            .join();
+
+        int sgWins = sgStats != null && sgStats.has("wins") ? sgStats.get("wins").getAsInt() : 0;
+        int sgKills = sgStats != null && sgStats.has("kills") ? sgStats.get("kills").getAsInt() : 0;
+        int sgDeaths = sgStats != null && sgStats.has("deaths") ? sgStats.get("deaths").getAsInt() : 0;
+        int sgGames = sgStats != null && sgStats.has("games_played") ? sgStats.get("games_played").getAsInt() : 0;
+        double sgKD = sgDeaths > 0 ? (double) sgKills / sgDeaths : sgKills;
+
+        ItemStack sgItem = createItem(Material.DIAMOND_SWORD,
+            ChatColor.GREEN + "" + ChatColor.BOLD + "SURVIVAL GAMES",
+            "",
+            ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + sgWins,
+            ChatColor.YELLOW + "Kills: " + ChatColor.WHITE + sgKills,
+            ChatColor.YELLOW + "Deaths: " + ChatColor.WHITE + sgDeaths,
+            ChatColor.YELLOW + "K/D: " + ChatColor.WHITE + String.format("%.2f", sgKD),
+            ChatColor.YELLOW + "Games: " + ChatColor.WHITE + sgGames
+        );
+        addGlow(sgItem);
+        inv.setItem(20, sgItem);
+
+        int totalElo = 0;
+        int totalWins = 0;
+        int totalLosses = 0;
+        String[] kitTypes = {"nodebuff", "debuff", "classic", "builduhc", "combo", "sg"};
+
+        for (String kitType : kitTypes) {
+            JsonObject stats = plugin.getSupabaseManager()
+                .loadDuelStats(player.getUniqueId().toString(), kitType)
+                .join();
+
+            if (stats != null) {
+                totalElo += stats.has("elo") ? stats.get("elo").getAsInt() : 0;
+                totalWins += stats.has("wins") ? stats.get("wins").getAsInt() : 0;
+                totalLosses += stats.has("losses") ? stats.get("losses").getAsInt() : 0;
+            }
+        }
+
+        int avgElo = totalElo / kitTypes.length;
+        double duelWinrate = (totalWins + totalLosses) > 0 ? (totalWins * 100.0 / (totalWins + totalLosses)) : 0;
+
+        ItemStack duelItem = createItem(Material.IRON_SWORD,
+            ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "DUELS",
+            "",
+            ChatColor.YELLOW + "Average ELO: " + ChatColor.WHITE + avgElo,
+            ChatColor.YELLOW + "Total Wins: " + ChatColor.WHITE + totalWins,
+            ChatColor.YELLOW + "Total Losses: " + ChatColor.WHITE + totalLosses,
+            ChatColor.YELLOW + "Win Rate: " + ChatColor.WHITE + String.format("%.1f%%", duelWinrate),
+            "",
+            ChatColor.GRAY + "Click for detailed kit stats!"
+        );
+        addGlow(duelItem);
+        inv.setItem(24, duelItem);
+
+        inv.setItem(53, BACK_ITEM);
 
         player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
 
     public void openActivePlayers(Player player) {
         List<Player> online = new ArrayList<>(Bukkit.getOnlinePlayers());
-        int size = Math.min(54, ((online.size() + 8) / 9) * 9);
-        Inventory inv = Bukkit.createInventory(null, size, ChatColor.GREEN + "Active Players");
+        online.remove(player);
 
-        int slot = 0;
+        if (online.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "✖ No other players online!");
+            player.closeInventory();
+            return;
+        }
+
+        int size = Math.min(54, Math.max(27, ((online.size() + 9) / 9) * 9));
+        Inventory inv = Bukkit.createInventory(null, size,
+            ChatColor.GREEN + "" + ChatColor.BOLD + "Active Players");
+
+        fillBorders(inv, size);
+
+        int slot = 10;
         for (Player p : online) {
-            if (p.equals(player)) continue;
+            CubiomPlayer cp = plugin.getPlayerManager().getPlayer(p);
+            String stateStr = cp != null ? cp.getState().toString() : "UNKNOWN";
+            ChatColor stateColor = getStateColor(stateStr);
 
             ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
-            org.bukkit.inventory.meta.SkullMeta meta = (org.bukkit.inventory.meta.SkullMeta) head.getItemMeta();
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
             meta.setOwner(p.getName());
-            meta.setDisplayName(ChatColor.YELLOW + p.getName());
+            meta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + p.getName());
+
             List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Right-click to duel");
-            lore.add(ChatColor.GRAY + "Left-click to view profile");
+            lore.add("");
+            lore.add(ChatColor.GRAY + "Status: " + stateColor + stateStr);
+
+            if (cp != null && cp.getCurrentArena() != null) {
+                lore.add(ChatColor.GRAY + "Arena: " + ChatColor.WHITE + cp.getCurrentArena());
+            }
+
+            lore.add("");
+
+            if (cp != null && cp.isInLobby()) {
+                lore.add(ChatColor.YELLOW + "Left-Click: " + ChatColor.WHITE + "View Profile");
+                lore.add(ChatColor.YELLOW + "Right-Click: " + ChatColor.WHITE + "Duel Request");
+            } else {
+                lore.add(ChatColor.RED + "Player is busy!");
+            }
+
             meta.setLore(lore);
             head.setItemMeta(meta);
 
-            inv.setItem(slot++, head);
+            inv.setItem(slot, head);
+            slot++;
+            if (slot % 9 >= 7) slot += 2;
         }
 
+        inv.setItem(size - 1, BACK_ITEM);
+
         player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
 
     public void openLeaderboards(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Leaderboards");
+        Inventory inv = Bukkit.createInventory(null, 27,
+            ChatColor.GOLD + "" + ChatColor.BOLD + "Leaderboards");
 
-        ItemStack sgWins = createItem(Material.GOLD_INGOT, ChatColor.GREEN + "SG Wins",
-            ChatColor.GRAY + "Top 10 players by wins");
-        inv.setItem(10, sgWins);
+        fillBorders(inv, 27);
 
-        ItemStack sgKills = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "SG Kills",
-            ChatColor.GRAY + "Top 10 players by kills");
-        inv.setItem(12, sgKills);
+        ItemStack sgWins = createItem(Material.DIAMOND_SWORD,
+            ChatColor.GREEN + "" + ChatColor.BOLD + "SG WINS",
+            "",
+            ChatColor.GRAY + "View the top 10 players",
+            ChatColor.GRAY + "with the most SG wins!",
+            "",
+            ChatColor.YELLOW + "Click to view!"
+        );
+        addGlow(sgWins);
+        inv.setItem(11, sgWins);
 
-        ItemStack duelElo = createItem(Material.IRON_SWORD, ChatColor.LIGHT_PURPLE + "Duel ELO",
-            ChatColor.GRAY + "Top 10 players by ELO");
-        inv.setItem(14, duelElo);
-
-        ItemStack kits = createItem(Material.CHEST, ChatColor.AQUA + "Kit Leaderboards",
-            ChatColor.GRAY + "View leaderboards per kit");
-        inv.setItem(16, kits);
+        ItemStack duelElo = createItem(Material.IRON_SWORD,
+            ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "DUEL ELO",
+            "",
+            ChatColor.GRAY + "View the top 10 players",
+            ChatColor.GRAY + "with the highest ELO!",
+            "",
+            ChatColor.YELLOW + "Click to select kit!"
+        );
+        addGlow(duelElo);
+        inv.setItem(15, duelElo);
 
         player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
 
     public void openSettings(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, ChatColor.RED + "Settings");
+        Inventory inv = Bukkit.createInventory(null, 27,
+            ChatColor.RED + "" + ChatColor.BOLD + "Settings");
 
-        ItemStack language = createItem(Material.PAPER, ChatColor.YELLOW + "Language",
-            ChatColor.GRAY + "Current: English",
-            ChatColor.GRAY + "Click to change");
+        fillBorders(inv, 27);
+
+        CubiomPlayer cp = plugin.getPlayerManager().getPlayer(player);
+        String currentLang = cp != null ? cp.getLanguage() : "en_US";
+        String langDisplay = getLangDisplay(currentLang);
+
+        ItemStack language = createItem(Material.PAPER,
+            ChatColor.YELLOW + "" + ChatColor.BOLD + "LANGUAGE",
+            "",
+            ChatColor.GRAY + "Current: " + ChatColor.WHITE + langDisplay,
+            "",
+            ChatColor.GRAY + "Available languages:",
+            ChatColor.WHITE + "• English (en_US)",
+            ChatColor.WHITE + "• Dansk (da_DK)",
+            ChatColor.WHITE + "• Deutsch (de_DE)",
+            ChatColor.WHITE + "• Español (es_ES)",
+            "",
+            ChatColor.YELLOW + "Click to change!"
+        );
         inv.setItem(13, language);
 
+        inv.setItem(26, BACK_ITEM);
+
         player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
+    }
+
+    private static void fillBorders(Inventory inv, int size) {
+        for (int i = 0; i < 9; i++) {
+            inv.setItem(i, BORDER_ITEM);
+        }
+        for (int i = size - 9; i < size; i++) {
+            inv.setItem(i, BORDER_ITEM);
+        }
+        for (int i = 9; i < size - 9; i += 9) {
+            inv.setItem(i, BORDER_ITEM);
+            if (i + 8 < size) inv.setItem(i + 8, BORDER_ITEM);
+        }
+    }
+
+    private static ItemStack createBorderItem() {
+        ItemStack item = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(" ");
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private static ItemStack createBackItem() {
+        ItemStack item = new ItemStack(Material.ARROW);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "← BACK");
+        meta.setLore(Arrays.asList("", ChatColor.GRAY + "Return to previous menu"));
+        item.setItemMeta(meta);
+        return item;
     }
 
     private ItemStack createItem(Material material, String name, String... lore) {
@@ -174,9 +447,40 @@ public class GUIManager {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(name);
         if (lore.length > 0) {
-            meta.setLore(java.util.Arrays.asList(lore));
+            meta.setLore(Arrays.asList(lore));
         }
         item.setItemMeta(meta);
         return item;
+    }
+
+    private void addGlow(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        item.setItemMeta(meta);
+        item.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.DURABILITY, 1);
+    }
+
+    private ChatColor getStatusColor(String status) {
+        if (status.equals("WAITING")) return ChatColor.GREEN;
+        if (status.equals("COUNTDOWN")) return ChatColor.YELLOW;
+        if (status.equals("ACTIVE")) return ChatColor.RED;
+        return ChatColor.GRAY;
+    }
+
+    private ChatColor getStateColor(String state) {
+        if (state.equals("LOBBY")) return ChatColor.GREEN;
+        if (state.equals("IN_GAME")) return ChatColor.YELLOW;
+        if (state.equals("SPECTATING")) return ChatColor.AQUA;
+        return ChatColor.GRAY;
+    }
+
+    private String getLangDisplay(String code) {
+        switch (code) {
+            case "en_US": return "English";
+            case "da_DK": return "Dansk";
+            case "de_DE": return "Deutsch";
+            case "es_ES": return "Español";
+            default: return "English";
+        }
     }
 }
