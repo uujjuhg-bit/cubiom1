@@ -92,6 +92,10 @@ public class Cubiom extends JavaPlugin {
                 arenaSetupManager.shutdown();
             }
 
+            if (arenaManager != null) {
+                arenaManager.saveAllArenas();
+            }
+
             if (rollbackManager != null) {
                 rollbackManager.shutdown();
             }

@@ -2,8 +2,14 @@ package com.cubiom.arena;
 
 import com.cubiom.Cubiom;
 import com.cubiom.core.GameType;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.*;
 
 public class ArenaManager {
@@ -12,38 +18,90 @@ public class ArenaManager {
     private final Map<String, SGArena> sgArenas;
     private final Map<String, DuelArena> duelArenas;
 
+    private final Gson gson;
+
     public ArenaManager(Cubiom plugin) {
         this.plugin = plugin;
         this.sgArenas = new HashMap<>();
         this.duelArenas = new HashMap<>();
+        this.gson = new GsonBuilder().setPrettyPrinting().create();
     }
 
     public void loadArenas() {
-        File sgDir = new File(plugin.getDataFolder(), "arenas/sg");
-        if (sgDir.exists() && sgDir.isDirectory()) {
-            for (File file : sgDir.listFiles()) {
-                if (file.getName().endsWith(".yml")) {
-                    String name = file.getName().replace(".yml", "");
-                    SGArena arena = new SGArena(name);
-                    arena.loadFromConfig();
+        loadSGArenas();
+        loadDuelArenas();
+        plugin.getLogger().info("Loaded " + sgArenas.size() + " SG arenas and " + duelArenas.size() + " Duel arenas");
+    }
+
+    private void loadSGArenas() {
+        File file = new File(plugin.getDataFolder(), "data/arenas.json");
+        if (!file.exists()) return;
+
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
+            for (String name : json.keySet()) {
+                SGArena arena = SGArena.fromJSON(name, json.getAsJsonObject(name));
+                if (arena != null) {
                     sgArenas.put(name, arena);
                 }
             }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to load SG arenas: " + e.getMessage());
         }
+    }
 
-        File duelDir = new File(plugin.getDataFolder(), "arenas/duels");
-        if (duelDir.exists() && duelDir.isDirectory()) {
-            for (File file : duelDir.listFiles()) {
-                if (file.getName().endsWith(".yml")) {
-                    String name = file.getName().replace(".yml", "");
-                    DuelArena arena = new DuelArena(name);
-                    arena.loadFromConfig();
+    private void loadDuelArenas() {
+        File file = new File(plugin.getDataFolder(), "data/duel-arenas.json");
+        if (!file.exists()) return;
+
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
+            for (String name : json.keySet()) {
+                DuelArena arena = DuelArena.fromJSON(name, json.getAsJsonObject(name));
+                if (arena != null) {
                     duelArenas.put(name, arena);
                 }
             }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to load duel arenas: " + e.getMessage());
+        }
+    }
+
+    public void saveAllArenas() {
+        saveSGArenas();
+        saveDuelArenas();
+    }
+
+    private void saveSGArenas() {
+        File file = new File(plugin.getDataFolder(), "data/arenas.json");
+        file.getParentFile().mkdirs();
+
+        JsonObject json = new JsonObject();
+        for (Map.Entry<String, SGArena> entry : sgArenas.entrySet()) {
+            json.add(entry.getKey(), entry.getValue().toJSON());
         }
 
-        plugin.getLogger().info("Loaded " + sgArenas.size() + " SG arenas and " + duelArenas.size() + " Duel arenas");
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(json, writer);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to save SG arenas: " + e.getMessage());
+        }
+    }
+
+    private void saveDuelArenas() {
+        File file = new File(plugin.getDataFolder(), "data/duel-arenas.json");
+        file.getParentFile().mkdirs();
+
+        JsonObject json = new JsonObject();
+        for (Map.Entry<String, DuelArena> entry : duelArenas.entrySet()) {
+            json.add(entry.getKey(), entry.getValue().toJSON());
+        }
+
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(json, writer);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to save duel arenas: " + e.getMessage());
+        }
     }
 
     public SGArena getSGArena(String name) {
@@ -56,24 +114,22 @@ public class ArenaManager {
 
     public void addSGArena(SGArena arena) {
         sgArenas.put(arena.getName(), arena);
-        arena.saveToConfig();
+        saveSGArenas();
     }
 
     public void addDuelArena(DuelArena arena) {
         duelArenas.put(arena.getName(), arena);
-        arena.saveToConfig();
+        saveDuelArenas();
     }
 
     public void removeSGArena(String name) {
         sgArenas.remove(name);
-        File file = new File(plugin.getDataFolder(), "arenas/sg/" + name + ".yml");
-        if (file.exists()) file.delete();
+        saveSGArenas();
     }
 
     public void removeDuelArena(String name) {
         duelArenas.remove(name);
-        File file = new File(plugin.getDataFolder(), "arenas/duels/" + name + ".yml");
-        if (file.exists()) file.delete();
+        saveDuelArenas();
     }
 
     public List<SGArena> getAllSGArenas() {

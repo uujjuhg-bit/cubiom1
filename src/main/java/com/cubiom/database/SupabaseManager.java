@@ -158,6 +158,105 @@ public class SupabaseManager {
         }, executor);
     }
 
+    public CompletableFuture<JsonObject> loadSGStats(String uuid) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String urlString = supabaseUrl + "/rest/v1/sg_stats?player_uuid=eq." + uuid;
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("apikey", supabaseKey);
+                conn.setRequestProperty("Authorization", "Bearer " + supabaseKey);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseStr = response.toString();
+                if (responseStr.startsWith("[") && responseStr.length() > 2) {
+                    responseStr = responseStr.substring(1, responseStr.length() - 1);
+                    return gson.fromJson(responseStr, JsonObject.class);
+                }
+
+                return new JsonObject();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to load SG stats for " + uuid);
+                return new JsonObject();
+            }
+        }, executor);
+    }
+
+    public CompletableFuture<JsonObject> loadDuelStats(String uuid, String kitType) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String urlString = supabaseUrl + "/rest/v1/duel_stats?player_uuid=eq." + uuid + "&kit_type=eq." + kitType;
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("apikey", supabaseKey);
+                conn.setRequestProperty("Authorization", "Bearer " + supabaseKey);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseStr = response.toString();
+                if (responseStr.startsWith("[") && responseStr.length() > 2) {
+                    responseStr = responseStr.substring(1, responseStr.length() - 1);
+                    return gson.fromJson(responseStr, JsonObject.class);
+                }
+
+                return new JsonObject();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to load duel stats for " + uuid + " kit " + kitType);
+                return new JsonObject();
+            }
+        }, executor);
+    }
+
+    public CompletableFuture<JsonObject> loadPlayerData(String uuid) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String urlString = supabaseUrl + "/rest/v1/players?uuid=eq." + uuid;
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("apikey", supabaseKey);
+                conn.setRequestProperty("Authorization", "Bearer " + supabaseKey);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseStr = response.toString();
+                if (responseStr.startsWith("[") && responseStr.length() > 2) {
+                    responseStr = responseStr.substring(1, responseStr.length() - 1);
+                    return gson.fromJson(responseStr, JsonObject.class);
+                }
+
+                return new JsonObject();
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to load player data for " + uuid);
+                return new JsonObject();
+            }
+        }, executor);
+    }
+
     public void shutdown() {
         executor.shutdown();
         cache.clear();

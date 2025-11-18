@@ -1,6 +1,8 @@
 package com.cubiom.arena;
 
 import com.cubiom.core.GameType;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
@@ -126,19 +128,113 @@ public class SGArena extends Arena {
     public void loadFromConfig() {
     }
 
-    private String serializeLocation(Location loc) {
-        return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
+    public JsonObject toJSON() {
+        JsonObject json = new JsonObject();
+        json.addProperty("name", name);
+        json.addProperty("worldName", worldName);
+        json.addProperty("enabled", enabled);
+        json.addProperty("minPlayers", minPlayers);
+        json.addProperty("maxPlayers", maxPlayers);
+        json.addProperty("soloOnly", soloOnly);
+
+        JsonArray spawns = new JsonArray();
+        for (Location loc : playerSpawns) {
+            spawns.add(locationToJSON(loc));
+        }
+        json.add("spawnPoints", spawns);
+
+        JsonArray tier1 = new JsonArray();
+        for (Location loc : tier1Chests) {
+            tier1.add(locationToJSON(loc));
+        }
+        json.add("tier1Chests", tier1);
+
+        JsonArray tier2 = new JsonArray();
+        for (Location loc : tier2Chests) {
+            tier2.add(locationToJSON(loc));
+        }
+        json.add("tier2Chests", tier2);
+
+        JsonArray dmSpawns = new JsonArray();
+        for (Location loc : deathmatchSpawns) {
+            dmSpawns.add(locationToJSON(loc));
+        }
+        json.add("deathmatchSpawns", dmSpawns);
+
+        if (spectatorSpawn != null) {
+            json.add("spectatorSpawn", locationToJSON(spectatorSpawn));
+        }
+
+        return json;
     }
 
-    private Location deserializeLocation(String s) {
-        String[] parts = s.split(",");
+    public static SGArena fromJSON(String name, JsonObject json) {
+        try {
+            SGArena arena = new SGArena(name);
+            arena.worldName = json.get("worldName").getAsString();
+            arena.enabled = json.get("enabled").getAsBoolean();
+            arena.minPlayers = json.get("minPlayers").getAsInt();
+            arena.maxPlayers = json.get("maxPlayers").getAsInt();
+            arena.soloOnly = json.get("soloOnly").getAsBoolean();
+
+            if (json.has("spawnPoints")) {
+                JsonArray spawns = json.getAsJsonArray("spawnPoints");
+                for (int i = 0; i < spawns.size(); i++) {
+                    arena.playerSpawns.add(locationFromJSON(spawns.get(i).getAsJsonObject()));
+                }
+            }
+
+            if (json.has("tier1Chests")) {
+                JsonArray tier1 = json.getAsJsonArray("tier1Chests");
+                for (int i = 0; i < tier1.size(); i++) {
+                    arena.tier1Chests.add(locationFromJSON(tier1.get(i).getAsJsonObject()));
+                }
+            }
+
+            if (json.has("tier2Chests")) {
+                JsonArray tier2 = json.getAsJsonArray("tier2Chests");
+                for (int i = 0; i < tier2.size(); i++) {
+                    arena.tier2Chests.add(locationFromJSON(tier2.get(i).getAsJsonObject()));
+                }
+            }
+
+            if (json.has("deathmatchSpawns")) {
+                JsonArray dmSpawns = json.getAsJsonArray("deathmatchSpawns");
+                for (int i = 0; i < dmSpawns.size(); i++) {
+                    arena.deathmatchSpawns.add(locationFromJSON(dmSpawns.get(i).getAsJsonObject()));
+                }
+            }
+
+            if (json.has("spectatorSpawn")) {
+                arena.spectatorSpawn = locationFromJSON(json.getAsJsonObject("spectatorSpawn"));
+            }
+
+            return arena;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static JsonObject locationToJSON(Location loc) {
+        JsonObject json = new JsonObject();
+        json.addProperty("world", loc.getWorld().getName());
+        json.addProperty("x", loc.getX());
+        json.addProperty("y", loc.getY());
+        json.addProperty("z", loc.getZ());
+        json.addProperty("yaw", loc.getYaw());
+        json.addProperty("pitch", loc.getPitch());
+        return json;
+    }
+
+    private static Location locationFromJSON(JsonObject json) {
         return new Location(
-            Bukkit.getWorld(parts[0]),
-            Double.parseDouble(parts[1]),
-            Double.parseDouble(parts[2]),
-            Double.parseDouble(parts[3]),
-            Float.parseFloat(parts[4]),
-            Float.parseFloat(parts[5])
+            Bukkit.getWorld(json.get("world").getAsString()),
+            json.get("x").getAsDouble(),
+            json.get("y").getAsDouble(),
+            json.get("z").getAsDouble(),
+            json.get("yaw").getAsFloat(),
+            json.get("pitch").getAsFloat()
         );
     }
 }

@@ -1,6 +1,7 @@
 package com.cubiom.arena;
 
 import com.cubiom.core.GameType;
+import com.google.gson.JsonObject;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
@@ -79,19 +80,61 @@ public class DuelArena extends Arena {
     public void loadFromConfig() {
     }
 
-    private String serializeLocation(Location loc) {
-        return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
+    public JsonObject toJSON() {
+        JsonObject json = new JsonObject();
+        json.addProperty("name", name);
+        json.addProperty("worldName", worldName);
+        json.addProperty("enabled", enabled);
+        json.addProperty("inUse", inUse);
+
+        if (corner1 != null) json.add("corner1", locationToJSON(corner1));
+        if (corner2 != null) json.add("corner2", locationToJSON(corner2));
+        if (spawn1 != null) json.add("spawn1", locationToJSON(spawn1));
+        if (spawn2 != null) json.add("spawn2", locationToJSON(spawn2));
+        if (spectatorSpawn != null) json.add("spectatorSpawn", locationToJSON(spectatorSpawn));
+
+        return json;
     }
 
-    private Location deserializeLocation(String s) {
-        String[] parts = s.split(",");
+    public static DuelArena fromJSON(String name, JsonObject json) {
+        try {
+            DuelArena arena = new DuelArena(name);
+            arena.worldName = json.get("worldName").getAsString();
+            arena.enabled = json.get("enabled").getAsBoolean();
+            arena.inUse = json.has("inUse") ? json.get("inUse").getAsBoolean() : false;
+
+            if (json.has("corner1")) arena.corner1 = locationFromJSON(json.getAsJsonObject("corner1"));
+            if (json.has("corner2")) arena.corner2 = locationFromJSON(json.getAsJsonObject("corner2"));
+            if (json.has("spawn1")) arena.spawn1 = locationFromJSON(json.getAsJsonObject("spawn1"));
+            if (json.has("spawn2")) arena.spawn2 = locationFromJSON(json.getAsJsonObject("spawn2"));
+            if (json.has("spectatorSpawn")) arena.spectatorSpawn = locationFromJSON(json.getAsJsonObject("spectatorSpawn"));
+
+            return arena;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static JsonObject locationToJSON(Location loc) {
+        JsonObject json = new JsonObject();
+        json.addProperty("world", loc.getWorld().getName());
+        json.addProperty("x", loc.getX());
+        json.addProperty("y", loc.getY());
+        json.addProperty("z", loc.getZ());
+        json.addProperty("yaw", loc.getYaw());
+        json.addProperty("pitch", loc.getPitch());
+        return json;
+    }
+
+    private static Location locationFromJSON(JsonObject json) {
         return new Location(
-            Bukkit.getWorld(parts[0]),
-            Double.parseDouble(parts[1]),
-            Double.parseDouble(parts[2]),
-            Double.parseDouble(parts[3]),
-            Float.parseFloat(parts[4]),
-            Float.parseFloat(parts[5])
+            Bukkit.getWorld(json.get("world").getAsString()),
+            json.get("x").getAsDouble(),
+            json.get("y").getAsDouble(),
+            json.get("z").getAsDouble(),
+            json.get("yaw").getAsFloat(),
+            json.get("pitch").getAsFloat()
         );
     }
 }
