@@ -3,6 +3,7 @@ package com.cubiom.listeners;
 import com.cubiom.Cubiom;
 import com.cubiom.player.CubiomPlayer;
 import com.cubiom.ui.LobbyHotbar;
+import com.google.gson.JsonObject;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
