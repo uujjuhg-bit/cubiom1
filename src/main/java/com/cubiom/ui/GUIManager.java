@@ -473,4 +473,219 @@ public class GUIManager {
             default: return "English";
         }
     }
+
+    public void openLanguageSelector(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 27,
+            ChatColor.YELLOW + "" + ChatColor.BOLD + "Language Selector");
+
+        fillBorders(inv, 27);
+
+        CubiomPlayer cp = plugin.getPlayerManager().getPlayer(player);
+        String currentLang = cp != null ? cp.getLanguage() : "en_US";
+
+        ItemStack enUs = createItem(Material.PAPER,
+            ChatColor.WHITE + "" + ChatColor.BOLD + "English",
+            "",
+            ChatColor.GRAY + "Set language to English",
+            "",
+            currentLang.equals("en_US") ? ChatColor.GREEN + "✓ Currently selected" : ChatColor.YELLOW + "Click to select"
+        );
+        if (currentLang.equals("en_US")) addGlow(enUs);
+        inv.setItem(11, enUs);
+
+        ItemStack daDk = createItem(Material.PAPER,
+            ChatColor.WHITE + "" + ChatColor.BOLD + "Dansk",
+            "",
+            ChatColor.GRAY + "Sæt sprog til Dansk",
+            "",
+            currentLang.equals("da_DK") ? ChatColor.GREEN + "✓ Valgt i øjeblikket" : ChatColor.YELLOW + "Klik for at vælge"
+        );
+        if (currentLang.equals("da_DK")) addGlow(daDk);
+        inv.setItem(13, daDk);
+
+        ItemStack deDe = createItem(Material.PAPER,
+            ChatColor.WHITE + "" + ChatColor.BOLD + "Deutsch",
+            "",
+            ChatColor.GRAY + "Sprache auf Deutsch setzen",
+            "",
+            currentLang.equals("de_DE") ? ChatColor.GREEN + "✓ Aktuell ausgewählt" : ChatColor.YELLOW + "Zum Auswählen klicken"
+        );
+        if (currentLang.equals("de_DE")) addGlow(deDe);
+        inv.setItem(15, deDe);
+
+        ItemStack esEs = createItem(Material.PAPER,
+            ChatColor.WHITE + "" + ChatColor.BOLD + "Español",
+            "",
+            ChatColor.GRAY + "Establecer idioma en Español",
+            "",
+            currentLang.equals("es_ES") ? ChatColor.GREEN + "✓ Actualmente seleccionado" : ChatColor.YELLOW + "Haz clic para seleccionar"
+        );
+        if (currentLang.equals("es_ES")) addGlow(esEs);
+        inv.setItem(22, esEs);
+
+        player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
+    }
+
+    public void openSGWinsLeaderboard(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 54,
+            ChatColor.GREEN + "" + ChatColor.BOLD + "Top 10 - SG Wins");
+
+        fillBorders(inv, 54);
+
+        List<JsonObject> topPlayers = plugin.getSupabaseManager()
+            .getTopSGWins(10)
+            .join();
+
+        int slot = 10;
+        int position = 1;
+        for (JsonObject playerData : topPlayers) {
+            String playerName = playerData.has("player_name") ?
+                playerData.get("player_name").getAsString() : "Unknown";
+            int wins = playerData.has("wins") ? playerData.get("wins").getAsInt() : 0;
+            int kills = playerData.has("kills") ? playerData.get("kills").getAsInt() : 0;
+            int deaths = playerData.has("deaths") ? playerData.get("deaths").getAsInt() : 0;
+            double kd = deaths > 0 ? (double) kills / deaths : kills;
+
+            Material icon = position == 1 ? Material.GOLD_BLOCK :
+                          position == 2 ? Material.IRON_BLOCK :
+                          position == 3 ? Material.EMERALD_BLOCK : Material.DIAMOND;
+
+            ChatColor rankColor = position <= 3 ? ChatColor.GOLD : ChatColor.YELLOW;
+
+            ItemStack item = createItem(icon,
+                rankColor + "#" + position + " " + ChatColor.WHITE + playerName,
+                "",
+                ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + wins,
+                ChatColor.YELLOW + "Kills: " + ChatColor.WHITE + kills,
+                ChatColor.YELLOW + "K/D: " + ChatColor.WHITE + String.format("%.2f", kd)
+            );
+            if (position <= 3) addGlow(item);
+
+            inv.setItem(slot, item);
+            slot++;
+            if (slot % 9 >= 7) slot += 2;
+            position++;
+        }
+
+        player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.LEVEL_UP, 1.0f, 1.0f);
+    }
+
+    public void openDuelKitSelector(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 27,
+            ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Select Leaderboard Kit");
+
+        fillBorders(inv, 27);
+
+        List<Kit> kits = Kit.getAllKits();
+        int[] slots = {10, 11, 12, 14, 15, 16};
+
+        for (int i = 0; i < Math.min(kits.size(), slots.length); i++) {
+            Kit kit = kits.get(i);
+            ItemStack item = new ItemStack(kit.getIcon());
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', kit.getDisplayName()));
+            meta.setLore(Arrays.asList(
+                "",
+                ChatColor.GRAY + "View top 10 players",
+                ChatColor.GRAY + "in this kit!",
+                "",
+                ChatColor.YELLOW + "Click to view!"
+            ));
+            item.setItemMeta(meta);
+            inv.setItem(slots[i], item);
+        }
+
+        player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
+    }
+
+    public void openDuelEloLeaderboard(Player player, String kitName) {
+        Inventory inv = Bukkit.createInventory(null, 54,
+            ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Top 10 - " + kitName.toUpperCase() + " ELO");
+
+        fillBorders(inv, 54);
+
+        List<JsonObject> topPlayers = plugin.getSupabaseManager()
+            .getTopDuelElo(kitName, 10)
+            .join();
+
+        int slot = 10;
+        int position = 1;
+        for (JsonObject playerData : topPlayers) {
+            String playerName = playerData.has("player_name") ?
+                playerData.get("player_name").getAsString() : "Unknown";
+            int elo = playerData.has("elo") ? playerData.get("elo").getAsInt() : 1000;
+            int wins = playerData.has("wins") ? playerData.get("wins").getAsInt() : 0;
+            int losses = playerData.has("losses") ? playerData.get("losses").getAsInt() : 0;
+            double winrate = (wins + losses) > 0 ? (wins * 100.0 / (wins + losses)) : 0;
+
+            Material icon = position == 1 ? Material.GOLD_BLOCK :
+                          position == 2 ? Material.IRON_BLOCK :
+                          position == 3 ? Material.EMERALD_BLOCK : Material.DIAMOND;
+
+            ChatColor rankColor = position <= 3 ? ChatColor.GOLD : ChatColor.YELLOW;
+
+            ItemStack item = createItem(icon,
+                rankColor + "#" + position + " " + ChatColor.WHITE + playerName,
+                "",
+                ChatColor.YELLOW + "ELO: " + ChatColor.WHITE + elo,
+                ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + wins,
+                ChatColor.YELLOW + "Losses: " + ChatColor.WHITE + losses,
+                ChatColor.YELLOW + "Win Rate: " + ChatColor.WHITE + String.format("%.1f%%", winrate)
+            );
+            if (position <= 3) addGlow(item);
+
+            inv.setItem(slot, item);
+            slot++;
+            if (slot % 9 >= 7) slot += 2;
+            position++;
+        }
+
+        player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.LEVEL_UP, 1.0f, 1.0f);
+    }
+
+    public void openDuelKitStats(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 54,
+            ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Your Duel Kit Stats");
+
+        fillBorders(inv, 54);
+
+        List<Kit> kits = Kit.getAllKits();
+        int[] slots = {19, 21, 23, 25, 28, 30};
+
+        for (int i = 0; i < Math.min(kits.size(), slots.length); i++) {
+            Kit kit = kits.get(i);
+
+            JsonObject stats = plugin.getSupabaseManager()
+                .loadDuelStats(player.getUniqueId().toString(), kit.getName().toLowerCase())
+                .join();
+
+            int elo = stats != null && stats.has("elo") ? stats.get("elo").getAsInt() : 1000;
+            int wins = stats != null && stats.has("wins") ? stats.get("wins").getAsInt() : 0;
+            int losses = stats != null && stats.has("losses") ? stats.get("losses").getAsInt() : 0;
+            double winrate = (wins + losses) > 0 ? (wins * 100.0 / (wins + losses)) : 0;
+
+            ItemStack item = new ItemStack(kit.getIcon());
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', kit.getDisplayName()));
+
+            List<String> lore = new ArrayList<>();
+            lore.add("");
+            lore.add(ChatColor.YELLOW + "ELO: " + ChatColor.WHITE + elo);
+            lore.add(ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + wins);
+            lore.add(ChatColor.YELLOW + "Losses: " + ChatColor.WHITE + losses);
+            lore.add(ChatColor.YELLOW + "Win Rate: " + ChatColor.WHITE + String.format("%.1f%%", winrate));
+
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+
+            inv.setItem(slots[i], item);
+        }
+
+        player.openInventory(inv);
+        player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
+    }
 }

@@ -44,7 +44,7 @@ public class PlayerInteractEntityListener implements Listener {
         if (displayName.contains("Quick Play Duels") || item.getType() == Material.IRON_SWORD) {
             event.setCancelled(true);
             player.sendMessage(ChatColor.YELLOW + "Select a kit to duel " + target.getName());
-            player.chat("/duel " + target.getName());
+            plugin.getGUIManager().openKitSelector(player, target.getName());
         }
     }
 }

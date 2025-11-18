@@ -2,6 +2,7 @@ package com.cubiom.database;
 
 import com.cubiom.Cubiom;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -253,6 +254,72 @@ public class SupabaseManager {
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to load player data for " + uuid);
                 return new JsonObject();
+            }
+        }, executor);
+    }
+
+    public CompletableFuture<List<JsonObject>> getTopSGWins(int limit) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String urlString = supabaseUrl + "/rest/v1/sg_stats?order=wins.desc&limit=" + limit;
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("apikey", supabaseKey);
+                conn.setRequestProperty("Authorization", "Bearer " + supabaseKey);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseStr = response.toString();
+                JsonArray jsonArray = gson.fromJson(responseStr, JsonArray.class);
+                List<JsonObject> result = new ArrayList<>();
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    result.add(jsonArray.get(i).getAsJsonObject());
+                }
+                return result;
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to fetch top SG wins: " + e.getMessage());
+                return new ArrayList<>();
+            }
+        }, executor);
+    }
+
+    public CompletableFuture<List<JsonObject>> getTopDuelElo(String kitType, int limit) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String urlString = supabaseUrl + "/rest/v1/duel_stats?kit_type=eq." + kitType + "&order=elo.desc&limit=" + limit;
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("apikey", supabaseKey);
+                conn.setRequestProperty("Authorization", "Bearer " + supabaseKey);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                String responseStr = response.toString();
+                JsonArray jsonArray = gson.fromJson(responseStr, JsonArray.class);
+                List<JsonObject> result = new ArrayList<>();
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    result.add(jsonArray.get(i).getAsJsonObject());
+                }
+                return result;
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to fetch top duel ELO for " + kitType + ": " + e.getMessage());
+                return new ArrayList<>();
             }
         }, executor);
     }
