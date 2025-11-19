@@ -501,7 +501,7 @@ public class GUIManager {
             currentLang.equals("da_DK") ? ChatColor.GREEN + "✓ Valgt i øjeblikket" : ChatColor.YELLOW + "Klik for at vælge"
         );
         if (currentLang.equals("da_DK")) addGlow(daDk);
-        inv.setItem(13, daDk);
+        inv.setItem(12, daDk);
 
         ItemStack deDe = createItem(Material.PAPER,
             ChatColor.WHITE + "" + ChatColor.BOLD + "Deutsch",
@@ -521,7 +521,7 @@ public class GUIManager {
             currentLang.equals("es_ES") ? ChatColor.GREEN + "✓ Actualmente seleccionado" : ChatColor.YELLOW + "Haz clic para seleccionar"
         );
         if (currentLang.equals("es_ES")) addGlow(esEs);
-        inv.setItem(22, esEs);
+        inv.setItem(16, esEs);
 
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
