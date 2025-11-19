@@ -153,6 +153,19 @@ duels:
   inviter-offline: "&cThe player who invited you is offline!"
   inviter-busy: "&cThe player who invited you is now busy!"
   no-arena: "&cNo duel arenas available!"
+  setup:
+    spawn1-set: "&aSpawn 1 set!"
+    spawn2-set: "&aSpawn 2 set!"
+    corner1-set: "&aCorner 1 set!"
+    corner2-set: "&aCorner 2 set!"
+    started: "&aStarted setup for duel arena {0}"
+    complete: "&aDuel arena {0} setup complete!"
+    incomplete: "&cDuel arena is incomplete! Missing spawn points."
+
+arena:
+  setup:
+    corner1-set: "&aCorner 1 set!"
+    corner2-set: "&aCorner 2 set!"
 
 stats:
   title: "&b&l━━━━━ Your Stats ━━━━━"
