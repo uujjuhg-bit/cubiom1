@@ -178,9 +178,6 @@ public class DuelGame {
             0, 1, loserELO, 1, 0, 0
         );
 
-        Player p1 = Bukkit.getPlayer(player1);
-        Player p2 = Bukkit.getPlayer(player2);
-
         if (p1 != null && p2 != null) {
             plugin.getSupabaseManager().saveChallengeHistory(
                 player1.toString(),
