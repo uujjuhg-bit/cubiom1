@@ -142,15 +142,20 @@ public class DuelGame {
             0, 1, loserELO, 1, 0, 0
         );
 
-        plugin.getSupabaseManager().saveChallengeHistory(
-            player1.getUniqueId().toString(),
-            player1.getName(),
-            player2.getUniqueId().toString(),
-            player2.getName(),
-            kit.getName().toLowerCase(),
-            "completed",
-            winner.getUniqueId().toString()
-        );
+        Player p1 = Bukkit.getPlayer(player1);
+        Player p2 = Bukkit.getPlayer(player2);
+
+        if (p1 != null && p2 != null) {
+            plugin.getSupabaseManager().saveChallengeHistory(
+                player1.toString(),
+                p1.getName(),
+                player2.toString(),
+                p2.getName(),
+                kit.getName().toLowerCase(),
+                "completed",
+                winner.getUniqueId().toString()
+            );
+        }
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             cleanup();
