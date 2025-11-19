@@ -83,7 +83,18 @@ public class DuelGame {
                 return;
             }
 
-            sendMessage(ChatColor.YELLOW + "Duel starts in " + countdown + "...");
+            Player p1 = Bukkit.getPlayer(player1);
+            Player p2 = Bukkit.getPlayer(player2);
+            if (p1 != null) {
+                String msg = plugin.getLanguageManager().getMessage(p1, "duels.duel-starting")
+                    .replace("{0}", String.valueOf(countdown));
+                p1.sendMessage(msg);
+            }
+            if (p2 != null) {
+                String msg = plugin.getLanguageManager().getMessage(p2, "duels.duel-starting")
+                    .replace("{0}", String.valueOf(countdown));
+                p2.sendMessage(msg);
+            }
             playSound(Sound.NOTE_PLING);
 
             countdown--;
@@ -102,7 +113,12 @@ public class DuelGame {
         if (p1 != null) kit.applyKit(p1);
         if (p2 != null) kit.applyKit(p2);
 
-        sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "DUEL STARTED!");
+        if (p1 != null) {
+            p1.sendMessage(plugin.getLanguageManager().getMessage(p1, "duels.duel-started"));
+        }
+        if (p2 != null) {
+            p2.sendMessage(plugin.getLanguageManager().getMessage(p2, "duels.duel-started"));
+        }
         playSound(Sound.ENDERDRAGON_GROWL);
     }
 
@@ -119,14 +135,34 @@ public class DuelGame {
 
         long duration = (System.currentTimeMillis() - startTime) / 1000;
 
-        sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + winner.getName() + " has won the duel!");
-        sendMessage(ChatColor.YELLOW + "Duration: " + duration + " seconds");
+        Player p1 = Bukkit.getPlayer(player1);
+        Player p2 = Bukkit.getPlayer(player2);
+        if (p1 != null) {
+            String winMsg = plugin.getLanguageManager().getMessage(p1, "duels.winner")
+                .replace("{player}", winner.getName());
+            p1.sendMessage(winMsg);
+            String durMsg = plugin.getLanguageManager().getMessage(p1, "duels.duration")
+                .replace("{0}", String.valueOf(duration));
+            p1.sendMessage(durMsg);
+        }
+        if (p2 != null) {
+            String winMsg = plugin.getLanguageManager().getMessage(p2, "duels.winner")
+                .replace("{player}", winner.getName());
+            p2.sendMessage(winMsg);
+            String durMsg = plugin.getLanguageManager().getMessage(p2, "duels.duration")
+                .replace("{0}", String.valueOf(duration));
+            p2.sendMessage(durMsg);
+        }
 
         int winnerELO = calculateELO(winner, loser, true);
         int loserELO = calculateELO(loser, winner, false);
 
-        winner.sendMessage(ChatColor.GREEN + "Your new ELO: " + winnerELO);
-        loser.sendMessage(ChatColor.RED + "Your new ELO: " + loserELO);
+        String winnerEloMsg = plugin.getLanguageManager().getMessage(winner, "duels.elo-change")
+            .replace("{0}", String.valueOf(winnerELO));
+        winner.sendMessage(winnerEloMsg);
+        String loserEloMsg = plugin.getLanguageManager().getMessage(loser, "duels.elo-change-loss")
+            .replace("{0}", String.valueOf(loserELO));
+        loser.sendMessage(loserEloMsg);
 
         plugin.getSupabaseManager().updateDuelStats(
             winner.getUniqueId().toString(),

@@ -145,7 +145,14 @@ public class SGGame {
             }
 
             if (countdown <= 5 || countdown % 10 == 0) {
-                broadcastMessage(ChatColor.YELLOW + "Game starting in " + countdown + " seconds!");
+                for (UUID uuid : players) {
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null) {
+                        String msg = plugin.getLanguageManager().getMessage(p, "sg.game-starting")
+                            .replace("{time}", String.valueOf(countdown));
+                        p.sendMessage(msg);
+                    }
+                }
                 playSound(Sound.NOTE_PLING);
             }
 
@@ -159,7 +166,14 @@ public class SGGame {
         }
 
         state = GameState.GRACE_PERIOD;
-        broadcastMessage(ChatColor.GREEN + "Game started! Grace period: " + gracePeriod + " seconds");
+        for (UUID uuid : players) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null) {
+                String msg = plugin.getLanguageManager().getMessage(p, "sg.grace-period")
+                    .replace("{time}", String.valueOf(gracePeriod));
+                p.sendMessage(msg);
+            }
+        }
 
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
@@ -196,7 +210,12 @@ public class SGGame {
         task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (gracePeriod <= 0) {
                 state = GameState.ACTIVE;
-                broadcastMessage(ChatColor.RED + "Grace period ended! PvP enabled!");
+                for (UUID uuid : players) {
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null) {
+                        p.sendMessage(plugin.getLanguageManager().getMessage(p, "sg.grace-period-end"));
+                    }
+                }
                 playSound(Sound.ENDERDRAGON_GROWL);
                 if (task != null) task.cancel();
                 startGameTimer();
@@ -204,7 +223,14 @@ public class SGGame {
             }
 
             if (gracePeriod <= 5 || gracePeriod % 10 == 0) {
-                broadcastMessage(ChatColor.YELLOW + "PvP in " + gracePeriod + " seconds!");
+                for (UUID uuid : players) {
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null) {
+                        String msg = plugin.getLanguageManager().getMessage(p, "sg.grace-period-warning")
+                            .replace("{0}", String.valueOf(gracePeriod));
+                        p.sendMessage(msg);
+                    }
+                }
             }
 
             gracePeriod--;
@@ -216,7 +242,12 @@ public class SGGame {
             gameTime++;
 
             if (gameTime == 300) {
-                broadcastMessage(ChatColor.GOLD + "Deathmatch in 1 minute!");
+                for (UUID uuid : players) {
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null) {
+                        p.sendMessage(plugin.getLanguageManager().getMessage(p, "sg.deathmatch-minute-warning"));
+                    }
+                }
             } else if (gameTime == 360) {
                 startDeathmatch();
             }
@@ -262,11 +293,26 @@ public class SGGame {
         }
 
         if (winner != null) {
-            broadcastMessage(ChatColor.GOLD + "" + ChatColor.BOLD + winner.getName() + " has won the game!");
-            int playerKills = kills.getOrDefault(winner.getUniqueId(), 0);
-            broadcastMessage(ChatColor.YELLOW + "Kills: " + playerKills);
+            for (UUID uuid : players) {
+                Player p = Bukkit.getPlayer(uuid);
+                if (p != null) {
+                    String winMsg = plugin.getLanguageManager().getMessage(p, "sg.winner")
+                        .replace("{player}", winner.getName());
+                    p.sendMessage(winMsg);
+
+                    int playerKills = kills.getOrDefault(winner.getUniqueId(), 0);
+                    String killMsg = plugin.getLanguageManager().getMessage(p, "sg.winner-kills")
+                        .replace("{0}", String.valueOf(playerKills));
+                    p.sendMessage(killMsg);
+                }
+            }
         } else {
-            broadcastMessage(ChatColor.RED + "Game ended with no winner!");
+            for (UUID uuid : players) {
+                Player p = Bukkit.getPlayer(uuid);
+                if (p != null) {
+                    p.sendMessage(plugin.getLanguageManager().getMessage(p, "sg.no-winner"));
+                }
+            }
         }
 
         boolean isSolo = arena.isSoloOnly();

@@ -34,38 +34,41 @@ public class DuelManager {
         CubiomPlayer cp = plugin.getPlayerManager().getPlayer(player);
 
         if (cp == null) {
-            player.sendMessage(ChatColor.RED + "✖ Error: Player data not loaded!");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.error.data-not-loaded"));
             return;
         }
 
         if (!cp.isInLobby()) {
-            player.sendMessage(ChatColor.RED + "✖ You must be in the lobby to join a queue!");
-            player.sendMessage(ChatColor.GRAY + "Finish your current game first.");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.error.must-be-in-lobby"));
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.error.finish-current-game"));
             return;
         }
 
         if (isInAnyQueue(player)) {
-            player.sendMessage(ChatColor.RED + "✖ You are already in a queue!");
-            player.sendMessage(ChatColor.GRAY + "Use /duel leave to leave your current queue.");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.error.already-in-queue"));
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.error.leave-queue-first"));
             return;
         }
 
         Queue<UUID> queue = queues.get(kitName.toLowerCase());
         if (queue == null) {
-            player.sendMessage(ChatColor.RED + "✖ Invalid kit: " + kitName);
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.error.invalid-kit")
+                .replace("{0}", kitName));
             return;
         }
 
         queue.add(player.getUniqueId());
         cp.setSelectedKit(kitName);
 
-        player.sendMessage(ChatColor.GREEN + "✓ Joined " + ChatColor.YELLOW + kitName + ChatColor.GREEN + " queue!");
-        player.sendMessage(ChatColor.GRAY + "Players in queue: " + ChatColor.WHITE + queue.size());
+        player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.queue.joined")
+            .replace("{0}", kitName));
+        player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.queue.players-in-queue")
+            .replace("{0}", String.valueOf(queue.size())));
 
         if (queue.size() == 1) {
-            player.sendMessage(ChatColor.YELLOW + "⌛ Waiting for an opponent...");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.queue.waiting"));
         } else {
-            player.sendMessage(ChatColor.YELLOW + "⚔ Finding match...");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.queue.finding-match"));
         }
 
         player.playSound(player.getLocation(), Sound.NOTE_PLING, 1.0f, 1.5f);
@@ -90,10 +93,10 @@ public class DuelManager {
         }
 
         if (wasInQueue) {
-            player.sendMessage(ChatColor.YELLOW + "✓ Left queue!");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.queue.left"));
             player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
         } else {
-            player.sendMessage(ChatColor.RED + "✖ You are not in a queue!");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.queue.not-in-queue"));
         }
     }
 
