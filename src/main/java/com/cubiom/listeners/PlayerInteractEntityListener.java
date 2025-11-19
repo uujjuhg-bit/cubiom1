@@ -38,12 +38,14 @@ public class PlayerInteractEntityListener implements Listener {
         ItemStack item = player.getItemInHand();
         if (item == null || item.getType() == Material.AIR) return;
 
-        String displayName = item.hasItemMeta() && item.getItemMeta().hasDisplayName() ?
-            item.getItemMeta().getDisplayName() : "";
-
-        if (displayName.contains("Quick Play Duels") || item.getType() == Material.IRON_SWORD) {
+        // Check if it's the iron sword (duel item)
+        if (item.getType() == Material.IRON_SWORD) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.YELLOW + "Select a kit to duel " + target.getName());
+
+            String message = plugin.getLanguageManager().getMessage(player, "duels.invite.sent")
+                .replace("{0}", target.getName());
+            player.sendMessage(message);
+
             plugin.getGUIManager().openKitSelector(player, target.getName());
         }
     }

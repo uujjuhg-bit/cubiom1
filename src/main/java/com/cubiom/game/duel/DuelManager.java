@@ -102,7 +102,7 @@ public class DuelManager {
 
     public void sendDuelInvite(Player sender, Player target, String kitName) {
         if (sender.equals(target)) {
-            sender.sendMessage(ChatColor.RED + "✖ You cannot duel yourself!");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.cannot-duel-self"));
             return;
         }
 
@@ -110,42 +110,46 @@ public class DuelManager {
         CubiomPlayer targetCp = plugin.getPlayerManager().getPlayer(target);
 
         if (senderCp == null || targetCp == null) {
-            sender.sendMessage(ChatColor.RED + "✖ Error: Player data not loaded!");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.data-not-loaded"));
             return;
         }
 
         if (senderCp.hasCooldown("duel_invite")) {
             long remaining = senderCp.getRemainingCooldown("duel_invite");
-            sender.sendMessage(ChatColor.RED + "✖ Slow down! Wait " + remaining + " seconds before sending another invite.");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.invite-cooldown")
+                .replace("{0}", String.valueOf(remaining)));
             sender.playSound(sender.getLocation(), Sound.VILLAGER_NO, 1.0f, 1.0f);
             return;
         }
 
         if (!senderCp.isInLobby()) {
-            sender.sendMessage(ChatColor.RED + "✖ You must be in the lobby to send duel invites!");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.must-be-in-lobby-invite"));
             return;
         }
 
         if (!targetCp.isInLobby()) {
-            sender.sendMessage(ChatColor.RED + "✖ " + target.getName() + " is not available right now!");
-            sender.sendMessage(ChatColor.GRAY + "They are currently in a game.");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.target-not-available")
+                .replace("{0}", target.getName()));
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.target-in-game"));
             return;
         }
 
         if (pendingInvites.containsKey(target.getUniqueId())) {
-            sender.sendMessage(ChatColor.RED + "✖ " + target.getName() + " already has a pending duel invite!");
-            sender.sendMessage(ChatColor.GRAY + "Try again in a moment.");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.target-has-invite")
+                .replace("{0}", target.getName()));
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.try-again"));
             return;
         }
 
         if (isInAnyQueue(sender)) {
-            sender.sendMessage(ChatColor.RED + "✖ Leave your current queue before sending invites!");
-            sender.sendMessage(ChatColor.GRAY + "Use /duel leave first.");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.leave-queue-before-invite"));
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.use-duel-leave"));
             return;
         }
 
         if (isInAnyQueue(target)) {
-            sender.sendMessage(ChatColor.RED + "✖ " + target.getName() + " is currently in a queue!");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.error.target-in-queue")
+                .replace("{0}", target.getName()));
             return;
         }
 
@@ -157,28 +161,31 @@ public class DuelManager {
 
         senderCp.setCooldown("duel_invite", 30000);
 
-        sender.sendMessage(ChatColor.GREEN + "✓ Duel invite sent to " + ChatColor.YELLOW + target.getName());
-        sender.sendMessage(ChatColor.GRAY + "Kit: " + kitDisplay);
+        sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.invite.sent")
+            .replace("{0}", target.getName()));
+        sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.invite.kit-display")
+            .replace("{0}", kitDisplay));
         sender.playSound(sender.getLocation(), Sound.NOTE_PLING, 1.0f, 1.0f);
 
         target.sendMessage("");
-        target.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "⚔ DUEL REQUEST ⚔");
-        target.sendMessage("");
-        target.sendMessage(ChatColor.YELLOW + "  " + sender.getName() + ChatColor.GRAY + " has challenged you!");
-        target.sendMessage(ChatColor.GRAY + "  Kit: " + kitDisplay);
-        target.sendMessage("");
-        target.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "  [ACCEPT] " + ChatColor.DARK_GRAY + "| " +
-                         ChatColor.RED + "" + ChatColor.BOLD + "[DECLINE]");
-        target.sendMessage(ChatColor.GRAY + "  /duel accept or /duel decline");
-        target.sendMessage(ChatColor.DARK_GRAY + "  Expires in 30 seconds");
+        target.sendMessage(plugin.getLanguageManager().getMessage(target, "duels.invite.received-header"));
+        target.sendMessage(plugin.getLanguageManager().getMessage(target, "duels.invite.received-from")
+            .replace("{0}", sender.getName()));
+        target.sendMessage(plugin.getLanguageManager().getMessage(target, "duels.invite.received-kit")
+            .replace("{0}", kitDisplay));
+        target.sendMessage(plugin.getLanguageManager().getMessage(target, "duels.invite.received-actions"));
+        target.sendMessage(plugin.getLanguageManager().getMessage(target, "duels.invite.received-commands"));
+        target.sendMessage(plugin.getLanguageManager().getMessage(target, "duels.invite.received-expires"));
         target.sendMessage("");
         target.playSound(target.getLocation(), Sound.NOTE_PLING, 1.0f, 2.0f);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             DuelInvite removed = pendingInvites.remove(target.getUniqueId());
             if (removed != null && removed.getSender().equals(sender.getUniqueId())) {
-                sender.sendMessage(ChatColor.RED + "✖ Your duel invite to " + target.getName() + " expired.");
-                target.sendMessage(ChatColor.RED + "✖ Duel invite from " + sender.getName() + " expired.");
+                sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.invite.expired-sender")
+                    .replace("{0}", target.getName()));
+                target.sendMessage(plugin.getLanguageManager().getMessage(target, "duels.invite.expired-target")
+                    .replace("{0}", sender.getName()));
             }
         }, 600L);
     }
@@ -186,13 +193,14 @@ public class DuelManager {
     public void acceptDuelInvite(Player player) {
         DuelInvite invite = pendingInvites.remove(player.getUniqueId());
         if (invite == null) {
-            player.sendMessage(ChatColor.RED + "✖ You have no pending duel invites!");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.invite.no-pending"));
             return;
         }
 
         Player sender = Bukkit.getPlayer(invite.getSender());
         if (sender == null || !sender.isOnline()) {
-            player.sendMessage(ChatColor.RED + "✖ That player is no longer online!");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.error.target-not-available")
+                .replace("{0}", "sender"));
             return;
         }
 
@@ -225,26 +233,29 @@ public class DuelManager {
         DuelGame game = new DuelGame(plugin, arena, sender, player, kit);
         activeGames.add(game);
 
-        sender.sendMessage(ChatColor.GREEN + "✓ " + player.getName() + " accepted your duel!");
+        sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.invite-accepted")
+            .replace("{player}", player.getName()));
         sender.playSound(sender.getLocation(), Sound.LEVEL_UP, 1.0f, 1.5f);
 
-        player.sendMessage(ChatColor.GREEN + "✓ Accepted duel from " + sender.getName() + "!");
+        player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.invite-accepted")
+            .replace("{player}", sender.getName()));
         player.playSound(player.getLocation(), Sound.LEVEL_UP, 1.0f, 1.5f);
     }
 
     public void declineDuelInvite(Player player) {
         DuelInvite invite = pendingInvites.remove(player.getUniqueId());
         if (invite == null) {
-            player.sendMessage(ChatColor.RED + "✖ You have no pending duel invites!");
+            player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.invite.no-pending"));
             return;
         }
 
         Player sender = Bukkit.getPlayer(invite.getSender());
         if (sender != null && sender.isOnline()) {
-            sender.sendMessage(ChatColor.RED + "✖ " + player.getName() + " declined your duel invite.");
+            sender.sendMessage(plugin.getLanguageManager().getMessage(sender, "duels.invite-declined")
+                .replace("{player}", player.getName()));
         }
 
-        player.sendMessage(ChatColor.YELLOW + "✓ Declined duel invite!");
+        player.sendMessage(plugin.getLanguageManager().getMessage(player, "duels.invite-declined-you"));
         player.playSound(player.getLocation(), Sound.CLICK, 1.0f, 1.0f);
     }
 
