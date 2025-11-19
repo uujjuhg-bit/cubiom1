@@ -230,23 +230,53 @@ public class GUIManager {
             .loadSGStats(player.getUniqueId().toString())
             .join();
 
-        int sgWins = sgStats != null && sgStats.has("wins") ? sgStats.get("wins").getAsInt() : 0;
-        int sgKills = sgStats != null && sgStats.has("kills") ? sgStats.get("kills").getAsInt() : 0;
-        int sgDeaths = sgStats != null && sgStats.has("deaths") ? sgStats.get("deaths").getAsInt() : 0;
-        int sgGames = sgStats != null && sgStats.has("games_played") ? sgStats.get("games_played").getAsInt() : 0;
-        double sgKD = sgDeaths > 0 ? (double) sgKills / sgDeaths : sgKills;
+        int sgTotalWins = sgStats != null && sgStats.has("wins") ? sgStats.get("wins").getAsInt() : 0;
+        int sgTotalKills = sgStats != null && sgStats.has("kills") ? sgStats.get("kills").getAsInt() : 0;
+        int sgTotalDeaths = sgStats != null && sgStats.has("deaths") ? sgStats.get("deaths").getAsInt() : 0;
+        int sgTotalGames = sgStats != null && sgStats.has("games_played") ? sgStats.get("games_played").getAsInt() : 0;
 
-        ItemStack sgItem = createItem(Material.DIAMOND_SWORD,
-            ChatColor.GREEN + "" + ChatColor.BOLD + "SURVIVAL GAMES",
+        int soloWins = sgStats != null && sgStats.has("solo_wins") ? sgStats.get("solo_wins").getAsInt() : 0;
+        int soloKills = sgStats != null && sgStats.has("solo_kills") ? sgStats.get("solo_kills").getAsInt() : 0;
+        int soloDeaths = sgStats != null && sgStats.has("solo_deaths") ? sgStats.get("solo_deaths").getAsInt() : 0;
+        double soloKD = soloDeaths > 0 ? (double) soloKills / soloDeaths : soloKills;
+
+        int teamWins = sgStats != null && sgStats.has("team_wins") ? sgStats.get("team_wins").getAsInt() : 0;
+        int teamKills = sgStats != null && sgStats.has("team_kills") ? sgStats.get("team_kills").getAsInt() : 0;
+        int teamDeaths = sgStats != null && sgStats.has("team_deaths") ? sgStats.get("team_deaths").getAsInt() : 0;
+        double teamKD = teamDeaths > 0 ? (double) teamKills / teamDeaths : teamKills;
+
+        ItemStack sgTotalItem = createItem(Material.DIAMOND_SWORD,
+            ChatColor.GOLD + "" + ChatColor.BOLD + "TOTAL SG STATS",
             "",
-            ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + sgWins,
-            ChatColor.YELLOW + "Kills: " + ChatColor.WHITE + sgKills,
-            ChatColor.YELLOW + "Deaths: " + ChatColor.WHITE + sgDeaths,
-            ChatColor.YELLOW + "K/D: " + ChatColor.WHITE + String.format("%.2f", sgKD),
-            ChatColor.YELLOW + "Games: " + ChatColor.WHITE + sgGames
+            ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + sgTotalWins,
+            ChatColor.YELLOW + "Kills: " + ChatColor.WHITE + sgTotalKills,
+            ChatColor.YELLOW + "Deaths: " + ChatColor.WHITE + sgTotalDeaths,
+            ChatColor.YELLOW + "Games: " + ChatColor.WHITE + sgTotalGames
         );
-        addGlow(sgItem);
-        inv.setItem(20, sgItem);
+        addGlow(sgTotalItem);
+        inv.setItem(19, sgTotalItem);
+
+        ItemStack soloItem = createItem(Material.EMERALD,
+            ChatColor.GREEN + "" + ChatColor.BOLD + "SOLO SG",
+            "",
+            ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + soloWins,
+            ChatColor.YELLOW + "Kills: " + ChatColor.WHITE + soloKills,
+            ChatColor.YELLOW + "Deaths: " + ChatColor.WHITE + soloDeaths,
+            ChatColor.YELLOW + "K/D: " + ChatColor.WHITE + String.format("%.2f", soloKD)
+        );
+        addGlow(soloItem);
+        inv.setItem(20, soloItem);
+
+        ItemStack teamItem = createItem(Material.REDSTONE,
+            ChatColor.RED + "" + ChatColor.BOLD + "TEAM SG",
+            "",
+            ChatColor.YELLOW + "Wins: " + ChatColor.WHITE + teamWins,
+            ChatColor.YELLOW + "Kills: " + ChatColor.WHITE + teamKills,
+            ChatColor.YELLOW + "Deaths: " + ChatColor.WHITE + teamDeaths,
+            ChatColor.YELLOW + "K/D: " + ChatColor.WHITE + String.format("%.2f", teamKD)
+        );
+        addGlow(teamItem);
+        inv.setItem(21, teamItem);
 
         int totalElo = 0;
         int totalWins = 0;

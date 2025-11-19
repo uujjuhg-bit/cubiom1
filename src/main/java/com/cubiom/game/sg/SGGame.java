@@ -269,6 +269,11 @@ public class SGGame {
             broadcastMessage(ChatColor.RED + "Game ended with no winner!");
         }
 
+        boolean isSolo = arena.isSoloOnly();
+        long gameDuration = (System.currentTimeMillis() - (System.currentTimeMillis() - (gameTime * 1000))) / 1000;
+        com.google.gson.JsonArray participants = new com.google.gson.JsonArray();
+        com.google.gson.JsonObject statsJson = new com.google.gson.JsonObject();
+
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player == null) continue;
@@ -279,10 +284,41 @@ public class SGGame {
 
             plugin.getSupabaseManager().updateSGStats(
                 uuid.toString(),
+                player.getName(),
                 wins,
                 playerKills,
                 deaths,
-                1
+                1,
+                isSolo ? wins : 0,
+                isSolo ? playerKills : 0,
+                isSolo ? deaths : 0,
+                isSolo ? 1 : 0,
+                isSolo ? 0 : wins,
+                isSolo ? 0 : playerKills,
+                isSolo ? 0 : deaths,
+                isSolo ? 0 : 1
+            );
+
+            com.google.gson.JsonObject playerData = new com.google.gson.JsonObject();
+            playerData.addProperty("uuid", uuid.toString());
+            playerData.addProperty("name", player.getName());
+            playerData.addProperty("kills", playerKills);
+            playerData.addProperty("died", deaths == 1);
+            participants.add(playerData);
+        }
+
+        statsJson.addProperty("game_mode", isSolo ? "solo" : "team");
+        statsJson.addProperty("total_kills", kills.values().stream().mapToInt(Integer::intValue).sum());
+
+        if (winner != null) {
+            plugin.getSupabaseManager().saveMatchHistory(
+                "sg",
+                arena.getName(),
+                winner.getUniqueId().toString(),
+                winner.getName(),
+                participants,
+                (int) gameDuration,
+                statsJson
             );
         }
 

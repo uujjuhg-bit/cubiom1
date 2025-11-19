@@ -130,14 +130,26 @@ public class DuelGame {
 
         plugin.getSupabaseManager().updateDuelStats(
             winner.getUniqueId().toString(),
+            winner.getName(),
             kit.getName().toLowerCase(),
             1, 0, winnerELO, 1, 1, 1
         );
 
         plugin.getSupabaseManager().updateDuelStats(
             loser.getUniqueId().toString(),
+            loser.getName(),
             kit.getName().toLowerCase(),
             0, 1, loserELO, 1, 0, 0
+        );
+
+        plugin.getSupabaseManager().saveChallengeHistory(
+            player1.getUniqueId().toString(),
+            player1.getName(),
+            player2.getUniqueId().toString(),
+            player2.getName(),
+            kit.getName().toLowerCase(),
+            "completed",
+            winner.getUniqueId().toString()
         );
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
